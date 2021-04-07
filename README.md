@@ -1,41 +1,24 @@
-## About
-This repository contains algorithms developed for the student paper proposed for Rector's award at University of Zagreb.
+# RL Sphero upravljanje
 
-**Title**: Decentralized formation control for a multi-agent system of autonomous spherical robots
+UPOZORENJE: trenutno ovo rješenje ne radi najbolje
 
-**Authors**: Antonella Barišić, Marko Križmančić
+Ovaj repozitorij nadovezuje se na: https://github.com/mkrizmancic/sphero_formation/tree/0ac14aad3dd1a0af26f191c017e213279eebd52e
+Koristi se _openai gym_ toolkit za RL (dobiven modifikacijom već postojećeg _openai\_ros_ paketa).
 
-**Abstract**:
-In this work, a decentralized control algorithm based on Reynolds' rules is implemented on a multi-agent system of spherical robots. The algorithm procedurally generates motion patterns that resemble those characteristic for flocks of birds or schools of fish. Generated motion patterns allow robots to move in a closed space with static obstacles. A Bluetooth driver for controlling the robots has also been developed. The complete system is implemented using the ROS framework and Python programming language. The results of this work are demonstrated with experiments in a simulated environment, as well as in the real world using Sphero SPRK+ robots localized with _OptiTrack_.
+## Ovisnosti
+Potrebno je instalirati _openai gym_ paket:
+```bash
+pip install gym
+```
+## O paketu
+Ovaj repozitorij dodatno sadrži nekoliko skripti koje povezuju RL sa ROS-om i Stage simulatorom
+1. _stage\_connection.py_ - klasa koja sadrži _pause, unpause, reset_ funkcije povezane sa Stage simulatorom (relikvija _openai\_ros_ paketa, moguće da će biti izbačena u budućnosti)
+1. _robot\_stage\_env.py_ - najosnovnija verzija _gym environment-a_.
+1. _sphero\_env.py_ - sve što povezuje Sphero robota i ROS (_subscribers_ i _publishers_ )
+1. _sphero\_world.py_ - sve što povezuje Sphero robota i RL (definiranje akcija, stanja, nagrada kao i njihovo _handle-anje_)
+1. _qlearn.py_ - klasa koja sadrži Q-learn jednadžbe
+1. _start\_qlearning.py_ - skripta koja obavlja posao "učenja". Za zadani broj epizoda i koraka u epizodi proračunava i ažurira Q vrijednosti
+1. _qlearn\_params.yaml_ - sadrži parametre vezane za učenje
 
-## Installation
-Simply clone this repository inside ROS workspace and run `catkin_make` in workspace root.
-
-Simulation part uses [stage_ros](http://wiki.ros.org/stage_ros) simulator.
-
-If you wish to use this with Sphero robots, you must also download this repository: https://github.com/antonellabarisic/sphero_sprk_ros.
-
-_OptiTrack_ is used for localization of robots. However, Spheros cannot be equipped with tracking markers, so only their LEDs are used for tracking. Each Sphero shows up as a single marker. In order to stream positions of single markers, you must also download this repository: https://github.com/mkrizmancic/mocap_optitrack/tree/new-and-old-support-updated.
-
-## Usage
-**Simulation:**
-1. Set values for all desired parameters inside _launch/setup_sim.launch_.
-1. Set initial velocities in _cfg/sphero_init_vel.cfg_.
-1. In first terminal run `roscore` (optional)
-1. In second terminal run `roslaunch sphero_formation setup_sim.launch`
-1. In third terminal run `roslaunch sphero_formation reynolds_sim.launch`
-
-**Real world:**
-1. Set number of robots used in _launch/drivers.launch_. <br>
-(First _n_ robots defined with MAC addresses in _sphero_addresses.txt_ will be used.)
-1. Set values for all other desired parameters inside _launch/setup_real.launch_.
-1. Set initial velocities in _cfg/sphero_init_vel.cfg_.
-1. In first terminal run `roscore` (optional)
-1. In second terminal run `roslaunch sphero_formation drivers.launch`
-1. In third terminal run `roslaunch sphero_formation setup_real.launch`
-1. In fourth terminal run `roslaunch sphero_formation tracking.launch`
-1. In fifth terminal run `roslaunch sphero_formation flocking.launch`
-
-You can manually control robots with Logitech F710 joystick.
-
-Flocking algorithm parameters can be changed during runtime with _rqt_reconfigure_.
+## Pokretanje
+Isto kao i _sphero\_formation_ paket (u _reynolds\_sim.launch_ je dodano pokretanje RL _node-a_)

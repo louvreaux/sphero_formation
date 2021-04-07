@@ -294,7 +294,11 @@ class Boid(object):
 
             # Calculate total velocity (delta_velocity = acceleration * delta_time).
             self.velocity += acceleration / self.frequency
-            self.velocity.limit(self.max_speed)
+            
+            # OVO JE NOVO DODANO
+            #self.velocity.limit(self.max_speed)
+            self.velocity.normalize()
+            self.velocity = self.velocity * self.max_speed
 
             rospy.logdebug("force:        %s", force)
             rospy.logdebug("acceleration: %s", acceleration / self.frequency)

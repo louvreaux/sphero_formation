@@ -71,6 +71,7 @@ class NearestSearch(object):
     def robot_callback(self, *data):
         """Find and publish positions of nearest agents and obstacles."""
 
+        c1 = 0
         for agent in data:
             # Get current time and observed agent's name
             time = rospy.Time.now()
@@ -87,15 +88,20 @@ class NearestSearch(object):
             # For all other agents calculate the distance from the observed
             # agent and if the distance is within specified, add the agent to
             # the publishing message.
+            c2 = 0
             for agent2 in data:
-                friend_position = agent2.pose.pose.position
-                distance = get_distance(agent_position, friend_position)
-                if distance > 0 and distance <= self.search_radius:
-                    # Calculate relative position
-                    rel_pos = deepcopy(agent2)
-                    rel_pos.pose.pose.position.x = friend_position.x - agent_position.x
-                    rel_pos.pose.pose.position.y = friend_position.y - agent_position.y
-                    nearest_agents.array.append(rel_pos)
+                if c2 >= self.num_agents-1 and c1 < self.num_agents-1:
+                    continue
+                else:
+                    c2 += 1
+                    friend_position = agent2.pose.pose.position
+                    distance = get_distance(agent_position, friend_position)
+                    if distance > 0 and distance <= self.search_radius:
+                        # Calculate relative position
+                        rel_pos = deepcopy(agent2)
+                        rel_pos.pose.pose.position.x = friend_position.x - agent_position.x
+                        rel_pos.pose.pose.position.y = friend_position.y - agent_position.y
+                        nearest_agents.array.append(rel_pos)
 
             # Publish the relative positions message.
             self.nearest[key].publish(nearest_agents)
@@ -129,6 +135,7 @@ class NearestSearch(object):
 
             # Publish the wall and obstacle positions message.
             self.avoid[key].publish(avoids)
+            c1 += 1
 
     def __init__(self):
         """Create subscribers and publishers."""
