@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import rospy
+import pandas as pd
 import message_filters as mf
 from dynamic_reconfigure.msg import Config
 from geometry_msgs.msg import Twist, PoseArray
