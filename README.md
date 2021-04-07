@@ -3,7 +3,7 @@
 UPOZORENJE: trenutno ovo rješenje ne radi najbolje
 
 Ovaj repozitorij nadovezuje se na: https://github.com/mkrizmancic/sphero_formation/tree/0ac14aad3dd1a0af26f191c017e213279eebd52e
-Koristi se _openai gym_ toolkit za RL (dobiven modifikacijom već postojećeg _openai\_ros_ paketa).
+Koristi se _openai gym_ toolkit za RL (dobiven modifikacijom već postojećeg _openai\_ros_ paketa - http://wiki.ros.org/openai_ros).
 
 ## Ovisnosti
 Potrebno je instalirati _openai gym_ paket:
