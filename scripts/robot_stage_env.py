@@ -113,9 +113,10 @@ class RobotStageEnv(gym.Env):
         
         # self.stage.unpauseSim()
         self._set_init_pose()
-        # self.stage.pauseSim()
+        #self.stage.pauseSim()
         self.stage.resetSim()
-        # self.stage.unpauseSim()
+        rospy.sleep(0.2)
+        #self.stage.unpauseSim()
         # self.stage.pauseSim()
 
         rospy.logdebug("RESET SIM END")

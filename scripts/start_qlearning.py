@@ -10,10 +10,11 @@ import rospy
 import rospkg
 
 from task_envs.sphero import sphero_world
+from sphero_formation.msg import OdometryArray
 
 if __name__ == '__main__':
 
-    rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.WARN)
+    rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.WARN) #log_level=rospy.DEBUG
     r = rospy.Rate(10)
 
     # Init OpenAI_ROS ENV
@@ -50,7 +51,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     highest_reward = 0
-    #rospy.sleep(1.0)
+    rospy.wait_for_message('robot_1/nearest', OdometryArray)
 
     # Starts the main training loop: the one about the episodes to do
     for x in range(nepisodes):

@@ -42,7 +42,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
         self.robot_name_space = "robot_5"
 
-        # We launch the init function of the Parent Class robot_gazebo_env.RobotGazeboEnv
+        # We launch the init function of the Parent Class robot_stage_env.RobotStageEnv
         super(SpheroEnv, self).__init__(robot_name_space=self.robot_name_space)
         # self.stage.unpauseSim()
 
@@ -70,10 +70,13 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         dist_array = np.array([])
         closest_agent_dist = np.inf
 
-        temp_var = get_agent_position(my_agent)
-        self.agent_pose = np.array([temp_var.x, temp_var.y])             # POZICIJA NASEG AGENTA
         temp_var = get_agent_velocity(my_agent)
-        self.agent_velocity = np.array([temp_var.x, temp_var.y])         # BRZINA NASEG AGENT
+        temp_var.normalize() 
+
+
+        self.agent_steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
+        if temp_var.x < 0:
+           self.agent_steer += np.pi                                     # SMJER GIBANJA NASEG AGENTA
 
         self.closest_obstacles = np.ones((10,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
         self.closest_agent_pose = np.ones((1,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
@@ -97,7 +100,10 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             self.direction = np.array([temp_var.x, temp_var.y])
 
             temp_var = mean_velocity/self.num_of_nearest_agents
-            self.steer = np.array([temp_var.x, temp_var.y])
+            temp_var.normalize()
+            self.steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
+            if temp_var.x < 0:
+                self.steer += np.pi
 
         # IZRACUN NAJBLIZIH PREPREKA
         if obstacles:
@@ -114,7 +120,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
 
     # Methods that the TrainingEnvironment will need to define here as virtual
-    # because they will be used in RobotGazeboEnv GrandParentClass and defined in the
+    # because they will be used in RobotStageEnv GrandParentClass and defined in the
     # TrainingEnvironment.
     # ----------------------------
     def _set_init_pose(self):
@@ -156,4 +162,4 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # TU JE BILA FUNKCIJA KOJA CEKA DA ROBOT PROMIJENI POZICIJU TEMELJEM AKCIJE
     def get_callback(self):
 
-        return self.agent_pose, self.agent_velocity, self.closest_agent_pose, self.direction, self.steer, self.closest_obstacles
+        return self.agent_steer, self.closest_agent_pose, self.direction, self.steer, self.closest_obstacles
