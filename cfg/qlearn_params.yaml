@@ -12,7 +12,7 @@ wait_time: 0.1 # Time to wait in the reset phases
 
 #world parameters
 quantization_step: 0.1
-angle_quantization_step: 5.0
+angle_quantization_step: 90.0
 max_velocity: 0.25
 max_pose: 10.0
 max_relative_pose: 2.0 # can be equal to search radius

@@ -40,7 +40,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
 
         # Define action and observation space
-        self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step+1))
+        self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step))
 
         self.observation_space = spaces.Tuple((
                     spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                          # smjer
@@ -194,6 +194,8 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             steer = self.observation_quantization(steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
             steer = steer * np.pi / 180.0
+            if steer == 2 * np.pi:
+                steer = 0.0
         else:
             self._episode_done = True
             
