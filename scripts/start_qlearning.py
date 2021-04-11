@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     highest_reward = 0
-    rospy.wait_for_message('robot_1/nearest', OdometryArray)
+    rospy.sleep(2.0)
 
     # Starts the main training loop: the one about the episodes to do
     for x in range(nepisodes):

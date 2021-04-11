@@ -71,7 +71,8 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         closest_agent_dist = np.inf
 
         temp_var = get_agent_velocity(my_agent)
-        temp_var.normalize() 
+        temp_var.normalize()
+ 
 
 
         self.agent_steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
@@ -81,7 +82,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         self.closest_obstacles = np.ones((10,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
         self.closest_agent_pose = np.ones((1,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
         self.direction = np.ones((1,2)) * np.inf                         # RELATIVNA SREDNJA POZICIJA SUSJEDA
-        self.steer = np.ones((1,2)) * np.inf                             # RELATIVNA SREDNJA BRZINA SUSJEDA
+        self.steer = np.ones((1,1)) * np.inf                             # RELATIVNA SREDNJA BRZINA SUSJEDA
         self.num_of_nearest_agents = len(nearest_agents)
 
         # IZRACUN PROSJECNE POZICIJE I BRZINE NAJBLIZIH AGENATA
@@ -105,6 +106,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             if temp_var.x < 0:
                 self.steer += np.pi
 
+
         # IZRACUN NAJBLIZIH PREPREKA
         if obstacles:
             for obst in obstacles.poses:
@@ -117,7 +119,6 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                 counter += 1
                 if counter >= 10:
                     break
-
 
     # Methods that the TrainingEnvironment will need to define here as virtual
     # because they will be used in RobotStageEnv GrandParentClass and defined in the
