@@ -61,6 +61,7 @@ class RobotStageEnv(gym.Env):
         self._init_env_variables()
         self._update_episode()
         obs = self._get_obs()
+        # rospy.logwarn(str(obs))
         rospy.logdebug("END Reseting RobotStageEnvironment")
         return obs
 

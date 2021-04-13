@@ -43,10 +43,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step))
 
         self.observation_space = spaces.Tuple((
-                    spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                          # smjer
+                    spaces.Box(low = -2*np.pi, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                          # smjer
                     spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64),                  # najblizi susjed
-                    spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64),                  # pozicija grupiranja
-                    spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1), dtype = np.float64)))                                          # smjer jata
+                    spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64)))                 # pozicija grupiranja
+                    #spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1), dtype = np.float64)))                                          # smjer jata
                     #spaces.Box(low = -self.rel_obst_pose_max, high = self.rel_obst_pose_max, shape = (10, 2), dtype = np.float64)))    # pozicije prepreka
 
         # We set the reward range, which is not compulsory but here we do it.
@@ -110,7 +110,6 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         agent_steer, closest_agent_pose, direction, steer, closest_obst = self.get_callback()
         
         discretized_observations = self.discretize_observation(agent_steer, closest_agent_pose, direction, steer)#, closest_obst)
-        self.disc_speed = discretized_observations[1]
 
         rospy.logdebug("Observations==>"+str(discretized_observations))
         rospy.logdebug("END Get Observation ==>")
@@ -149,8 +148,8 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
                 reward += 10.0
 
             # OVO JE DA IMA ISTI SMJER
-            steer_diff = abs(observations[0] - observations[3])
-            reward -= steer_diff * 3.0
+            #steer_diff = abs(observations[0] - observations[3])
+            reward -= observations[0] * 3.0
         else:
             reward += self.end_episode_points
 
@@ -170,11 +169,14 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
         """
         self._episode_done = False
+        diff_ang = 0.0
         if  not np.any(direction[:] == np.inf):
 
             # KVANTIZIRAJ SMJER AGENTA
             agent_steer = self.observation_quantization(agent_steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
             agent_steer = agent_steer * np.pi / 180.0
+            if agent_steer >= 2 * np.pi:
+                agent_steer == 0.0
 
             # KVANTIZIRAJ POZICIJU NAJBLIZEG AGENTA I PREPREKA
             closest_agent_pose[0] = self.observation_quantization(closest_agent_pose[0], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
@@ -194,12 +196,14 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             steer = self.observation_quantization(steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
             steer = steer * np.pi / 180.0
-            if steer == 2 * np.pi:
+            if steer >= 2 * np.pi:
                 steer = 0.0
+
+            diff_ang = agent_steer - steer
         else:
             self._episode_done = True
             
-        discretized_obs = (agent_steer, closest_agent_pose, direction, steer)#, closest_obst) # agent_pos        
+        discretized_obs = (diff_ang, closest_agent_pose, direction)#, steer), closest_obst) # agent_pos        
 
         return discretized_obs
 

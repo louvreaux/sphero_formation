@@ -72,9 +72,6 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
         temp_var = get_agent_velocity(my_agent)
         temp_var.normalize()
- 
-
-
         self.agent_steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
         if temp_var.x < 0:
            self.agent_steer += np.pi                                     # SMJER GIBANJA NASEG AGENTA
