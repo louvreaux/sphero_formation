@@ -106,13 +106,14 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
         # IZRACUN NAJBLIZIH PREPREKA
         if obstacles:
-            for obst in obstacles.poses:
+            for obst in obstacles:
                 temp_dist = Vector2(x = obst.position.x, y = obst.position.y)
                 dist_array = np.append(dist_array, temp_dist.norm())
 
             counter = 0
+
             for x in np.argsort(dist_array):
-                self.closest_obstacles[counter] = np.array(obstacles.poses[x].position.x, obstacles.poses[x].position.y)
+                self.closest_obstacles[counter] = np.array([obstacles[x].position.x, obstacles[x].position.y])
                 counter += 1
                 if counter >= 10:
                     break
