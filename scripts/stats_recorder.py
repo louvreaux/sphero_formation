@@ -22,7 +22,9 @@ class StatsRecorder(object):
         self.total_steps = 0
         self.rewards = None
         self.actions = []
+        self.rewards_steps = []
         self.actions_episodes = []
+        self.rewards_episodes = []
 
         self.done = None
         self.closed = False
@@ -53,6 +55,7 @@ class StatsRecorder(object):
         self.steps += 1
         self.total_steps += 1
         self.rewards += reward
+        self.rewards_steps.append(reward)
         self.done = done
 
         if done:
@@ -77,6 +80,7 @@ class StatsRecorder(object):
         self.steps = 0
         self.rewards = 0
         self.actions = []
+        self.rewards_steps = []
         # We write the type at the beginning of the episode. If a user
         # changes the type, it's more natural for it to apply next
         # time the user calls reset().
@@ -88,6 +92,7 @@ class StatsRecorder(object):
             self.episode_rewards.append(float(self.rewards))
             self.timestamps.append(time.time())
             self.actions_episodes.append(self.actions)
+            self.rewards_episodes.append(self.rewards_steps)
 
     def close(self):
         self.flush()
@@ -105,4 +110,5 @@ class StatsRecorder(object):
                 'episode_rewards': self.episode_rewards,
                 'episode_types': self.episode_types,
                 'actions_by_episode': self.actions_episodes,
+                'rewards_by_episode': self.rewards_episodes,
             }, f, default=json_encode_np)

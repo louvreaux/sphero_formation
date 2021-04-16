@@ -7,7 +7,7 @@ from geometry_msgs.msg import Vector3, Twist
 from math import sqrt, cos, sin
 from robot_envs import sphero_env
 
-timestep_limit_per_episode = 1000 # Can be any Value
+timestep_limit_per_episode = 300 # Can be any Value
 
 register(
         id='SpheroWorld-v0',

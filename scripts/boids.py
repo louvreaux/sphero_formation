@@ -297,7 +297,7 @@ class Boid(object):
             
             # OVO JE NOVO DODANO
             #self.velocity.limit(self.max_speed)
-            self.velocity.normalize()
+            self.velocity = Vector2(x = 0.0, y = -1.0)
             self.velocity = self.velocity * self.max_speed
 
             rospy.logdebug("force:        %s", force)
