@@ -94,13 +94,23 @@ class StatsRecorder(object):
             self.actions_episodes.append(self.actions)
             self.rewards_episodes.append(self.rewards_steps)
 
-    def close(self):
-        self.flush()
+    def close(self, qlist):
+        self.flush(qlist)
         self.closed = True
 
-    def flush(self):
+    def flush(self, qlist):
         if self.closed:
             return
+        for key in qlist.keys():
+            if type(key) is not str:
+                try:
+                    qlist[str(key)] = qlist[key]
+                except:
+                    try:
+                        qlist[repr(key)] = qlist[key]
+                    except:
+                        pass
+                del qlist[key]
 
         with atomic_write.atomic_write(self.path) as f:
             json.dump({
@@ -111,4 +121,5 @@ class StatsRecorder(object):
                 'episode_types': self.episode_types,
                 'actions_by_episode': self.actions_episodes,
                 'rewards_by_episode': self.rewards_episodes,
+                'qlearn_table': qlist,
             }, f, default=json_encode_np)

@@ -1,4 +1,5 @@
 import rospy
+import random
 import numpy as np
 
 from gym import spaces
@@ -57,6 +58,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         rospy.logdebug("OBSERVATION SPACES TYPE===>"+str(self.observation_space))
 
         self.cumulated_steps = 0.0
+        self.last_obs = ()
 
         # Here we will add any init functions prior to starting the MyRobotEnv
         super(SpheroWorldEnv, self).__init__()
@@ -107,9 +109,9 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         """
         rospy.logdebug("Start Get Observation ==>")
         # We get the laser scan data
-        agent_steer, closest_agent_pose, direction, steer, closest_obst = self.get_callback()
+        agent_steer, closest_agent_pose, direction, steer, closest_obst, num_of_neighbours = self.get_callback()
         
-        discretized_observations = self.discretize_observation(agent_steer, closest_agent_pose, direction, steer)#, closest_obst)
+        discretized_observations = self.discretize_observation(agent_steer, closest_agent_pose, direction, steer, num_of_neighbours)#, closest_obst)
 
         rospy.logdebug("Observations==>"+str(discretized_observations))
         rospy.logdebug("END Get Observation ==>")
@@ -164,13 +166,12 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
     # Internal TaskEnv Methods
     
-    def discretize_observation(self, agent_steer, closest_agent_pose, direction, steer):#, closest_obst):
+    def discretize_observation(self, agent_steer, closest_agent_pose, direction, steer, num_of_neighbours):#, closest_obst):
         """
 
         """
         self._episode_done = False
-        diff_ang = 0.0
-        if  not np.any(direction[:] == np.inf):
+        if  num_of_neighbours != 0:
 
             # KVANTIZIRAJ SMJER AGENTA
             agent_steer = self.observation_quantization(agent_steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
@@ -181,6 +182,12 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
             # KVANTIZIRAJ POZICIJU NAJBLIZEG AGENTA I PREPREKA
             closest_agent_pose[0] = self.observation_quantization(closest_agent_pose[0], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
             closest_agent_pose[1] = self.observation_quantization(closest_agent_pose[1], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
+
+            if closest_agent_pose[0] == 0.0:
+                closest_agent_pose[0] = 0.0
+            if closest_agent_pose[1] == 0.0:
+                closest_agent_pose[1] = 0.0
+
             if sqrt(closest_agent_pose[0]**2 + closest_agent_pose[1]**2) <= self.too_close:
                 self._episode_done = True
 
@@ -190,20 +197,29 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
             #     if sqrt(closest_obst[i][0]**2 + closest_obst[i][1]**2) <= self.too_close:
             #         self._episode_done = True
 
-            # KVANTIZIRAJ POZICIJU I SMJER SUSJEDA
+            # KVANTIZIRAJ SREDNJU POZICIJU SUSJEDA
             direction[0] = self.observation_quantization(direction[0], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
             direction[1] = self.observation_quantization(direction[1], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
 
+            if direction[0] == 0.0:
+                direction[0] = 0.0
+            if direction[1] == 0.0:
+                direction[1] = 0.0
+
             steer = self.observation_quantization(steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
             steer = steer * np.pi / 180.0
+
             if steer >= 2 * np.pi:
                 steer = 0.0
 
             diff_ang = agent_steer - steer
+
+            discretized_obs = (diff_ang, closest_agent_pose, direction)
         else:
             self._episode_done = True
-            
-        discretized_obs = (diff_ang, closest_agent_pose, direction)#, steer), closest_obst) # agent_pos        
+            discretized_obs = self.last_obs
+
+        self.last_obs = discretized_obs
 
         return discretized_obs
 

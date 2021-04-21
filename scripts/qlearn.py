@@ -8,6 +8,7 @@ Inspired by https://gym.openai.com/evaluations/eval_kWknKOkPQ7izrixdhriurA
         @author: Victor Mayoral Vilches <victor@erlerobotics.com>
 '''
 import random
+import rospy
 
 class QLearn:
     def __init__(self, actions, epsilon, alpha, gamma):
@@ -19,6 +20,7 @@ class QLearn:
 
     def getQ(self, state, action):
         return self.q.get((state, action), 0.0)
+
 
     def learnQ(self, state, action, reward, value):
         '''

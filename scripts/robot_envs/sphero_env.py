@@ -76,10 +76,10 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         if temp_var.x < 0:
            self.agent_steer += np.pi                                     # SMJER GIBANJA NASEG AGENTA
 
-        self.closest_obstacles = np.ones((10,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
-        self.closest_agent_pose = np.ones((1,2)) * np.inf                # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
-        self.direction = np.ones((1,2)) * np.inf                         # RELATIVNA SREDNJA POZICIJA SUSJEDA
-        self.steer = np.ones((1,1)) * np.inf                             # RELATIVNA SREDNJA BRZINA SUSJEDA
+        self.closest_obstacles = np.ones((10,2))                         # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
+        self.closest_agent_pose = np.ones(2)                             # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
+        self.direction = np.ones(2)                                      # RELATIVNA SREDNJA POZICIJA SUSJEDA
+        self.steer =  10.0                                               # RELATIVNA SREDNJA BRZINA SUSJEDA
         self.num_of_nearest_agents = len(nearest_agents)
 
         # IZRACUN PROSJECNE POZICIJE I BRZINE NAJBLIZIH AGENATA
@@ -161,4 +161,4 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # TU JE BILA FUNKCIJA KOJA CEKA DA ROBOT PROMIJENI POZICIJU TEMELJEM AKCIJE
     def get_callback(self):
 
-        return self.agent_steer, self.closest_agent_pose, self.direction, self.steer, self.closest_obstacles
+        return self.agent_steer, self.closest_agent_pose, self.direction, self.steer, self.closest_obstacles, self.num_of_nearest_agents

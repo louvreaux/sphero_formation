@@ -1,5 +1,6 @@
 # Python compiled files
 *.pyc
+plot_stats.py
 # Debuggin data folder
 data/
 training_results/

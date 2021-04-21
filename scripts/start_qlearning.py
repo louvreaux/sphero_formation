@@ -11,10 +11,11 @@ import rospkg
 
 from task_envs.sphero import sphero_world
 from sphero_formation.msg import OdometryArray
+from nav_msgs.msg import Odometry
 
 if __name__ == '__main__':
 
-    rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.WARN) #log_level=rospy.DEBUG
+    rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.ERROR) #log_level=rospy.DEBUG
     r = rospy.Rate(10)
 
     # Init OpenAI_ROS ENV
@@ -52,7 +53,10 @@ if __name__ == '__main__':
 
     start_time = time.time()
     highest_reward = 0
-    rospy.sleep(2.0)
+    
+    temp_msg = Odometry()
+    while abs(temp_msg.twist.twist.linear.y) <= 0.05:
+        temp_msg = rospy.wait_for_message('/robot_0/odom', Odometry)
 
     try:
         # Starts the main training loop: the one about the episodes to do
@@ -128,5 +132,5 @@ if __name__ == '__main__':
         env.close()
 
     except rospy.ROSInterruptException:
-        sr.close()
+        sr.close(qlearn.q)
         env.close()
