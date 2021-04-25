@@ -25,4 +25,16 @@ Ovaj repozitorij dodatno sadrži nekoliko skripti koje povezuju RL sa ROS-om i S
 1. _qlearn\_params.yaml_ - sadrži parametre vezane za učenje
 
 ## Pokretanje
-Isto kao i _sphero\_formation_ paket (u _reynolds\_sim.launch_ je dodano pokretanje RL _node-a_)
+Prije pokretanja, potrebno je pozicionirati se unutar paketa:
+```bash
+cd catkin_ws/src/sphero_formation
+```
+te preuzeti _stage\_ros_ paket naredbom:
+```bash
+git submodule update --init
+```
+Zatim je potrebno kopirati paket u _\src_:
+```bash
+cp -r ~/catkin_ws/src/sphero_formation/stage_ros ~/catkin_ws/src
+```
+Ostalo je isto kao i _sphero\_formation_ paket (u _reynolds\_sim.launch_ je dodano pokretanje RL _node-a_)
