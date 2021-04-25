@@ -1,7 +1,7 @@
 #qlearn parameters
 alpha: 0.1
 gamma: 0.7
-epsilon: 0.92
+epsilon: 0.5
 epsilon_discount: 0.999
 nepisodes: 10000
 nsteps: 300
@@ -13,12 +13,12 @@ wait_time: 0.1 # Time to wait in the reset phases
 #world parameters
 quantization_step: 0.1
 angle_quantization_step: 90.0
-max_velocity: 0.25
+max_velocity: 0.3
 max_pose: 10.0
 max_relative_pose: 2.0 # can be equal to search radius
 max_relative_pose_to_obstacle: 1.0 # can be equal to avoid radius
 too_close: 0.1 
-crowd_radius_q: 0.4
-avoid_radius_q: 0.3
+crowd_radius_q: 0.3
+avoid_radius_q: 0.2
 close_radius: 0.5 # can be same as search radius
 end_episode_points: -100

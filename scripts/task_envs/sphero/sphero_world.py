@@ -146,12 +146,19 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             # OVO JE DA BUDE BLIZU JATU
             dist_to_flock = sqrt(observations[2][0]**2 + observations[2][1]**2)
-            if dist_to_flock <= self.close_radius:
-                reward += 10.0
-
+            if dist_to_flock <= 0.7 and dist_to_flock > self.close_radius:
+                reward += -50 * dist_to_flock + 30
+            elif dist_to_flock <= self.close_radius and dist_to_flock > 0.4:
+                reward += 5
+            elif dist_to_flock <= 0.4 and dist_to_flock > 0.2:
+                reward += 50 * dist_to_flock - 15
+            elif dist_to_flock <= 0.2:
+                reward -= 5
+            else:
+                reward -= 5
             # OVO JE DA IMA ISTI SMJER
             #steer_diff = abs(observations[0] - observations[3])
-            reward -= observations[0] * 3.0
+            reward -= abs(observations[0]) * 3.0
         else:
             reward += self.end_episode_points
 

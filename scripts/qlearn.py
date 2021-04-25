@@ -36,22 +36,32 @@ class QLearn:
     def chooseAction(self, state, return_q=False):
         q = [self.getQ(state, a) for a in self.actions]
         maxQ = max(q)
-
+        print("STANJE: " + str(state))
+        print("AKCIJE: " + str(q))
         if random.random() < self.epsilon:
-            minQ = min(q); mag = max(abs(minQ), abs(maxQ))
+            print("NASUMICNA AKCIJA!")
+            #minQ = min(q); mag = max(abs(minQ), abs(maxQ))
             # add random values to all the actions, recalculate maxQ
-            q = [q[i] + random.random() * mag - .5 * mag for i in range(len(self.actions))] 
-            maxQ = max(q)
+            #q = [q[i] + random.random() * mag - .5 * mag for i in range(len(self.actions))]
+            #print("NASUMICNE VRIJEDNOSTI AKCIJE: " + str(q)) 
+            rand_act = random.sample(q,1)
+            maxQ = max(rand_act)
+            #maxQ = max(q)
 
         count = q.count(maxQ)
         # In case there're several state-action max values 
         # we select a random one among them
         if count > 1:
+            print("POSTOJI VISE JEDNAKIH AKCIJA! ODABIREM...")
             best = [i for i in range(len(self.actions)) if q[i] == maxQ]
             i = random.choice(best)
+            print(str(i))
         else:
+            print("ODABIREM...")
             i = q.index(maxQ)
+            print(str(i))
 
+        print("\n")
         action = self.actions[i]        
         if return_q: # if they want it, give it!
             return action, q
