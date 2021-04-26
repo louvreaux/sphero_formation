@@ -8,6 +8,8 @@ from stats_recorder import StatsRecorder
 # ROS packages required
 import rospy
 import rospkg
+import json
+import glob
 
 from task_envs.sphero import sphero_world
 from sphero_formation.msg import OdometryArray
@@ -28,7 +30,6 @@ if __name__ == '__main__':
     rospack = rospkg.RosPack()
     pkg_path = rospack.get_path('sphero_formation')
     outdir = pkg_path + '/training_results'
-    #env = wrappers.Monitor(env, outdir, force=True)
     sr = StatsRecorder(outdir)
     rospy.loginfo("Monitor Wrapper started")
 
@@ -43,12 +44,21 @@ if __name__ == '__main__':
     epsilon_discount = rospy.get_param("epsilon_discount")
     nepisodes = rospy.get_param("nepisodes")
     nsteps = rospy.get_param("nsteps")
-
     running_step = rospy.get_param("running_step")
+
+    # Check if qtable already exist
+    path = glob.glob(outdir + '/openai_gym_batch.stats.json')
+    if not path:
+        q = {}
+    else:
+        with open(path[0], 'r') as f:
+            data = json.load(f)
+        f.close()
+        q = data["qlearn_table"]
 
     # Initialises the algorithm that we are going to use for learning
     qlearn = qlearn.QLearn(actions=range(env.action_space.n),
-                           alpha=Alpha, gamma=Gamma, epsilon=Epsilon)
+                           alpha=Alpha, gamma=Gamma, epsilon=Epsilon, q=q)
     initial_epsilon = qlearn.epsilon
 
     start_time = time.time()
