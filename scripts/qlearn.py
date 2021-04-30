@@ -19,7 +19,7 @@ class QLearn:
         self.actions = actions
 
     def getQ(self, state, action):
-        return self.q.get((state, action), 0.0)
+        return self.q.get(str((state, action)), 5.0)
 
 
     def learnQ(self, state, action, reward, value):
@@ -27,11 +27,11 @@ class QLearn:
         Q-learning:
             Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))            
         '''
-        oldv = self.q.get((state, action), None)
+        oldv = self.q.get(str((state, action)), None)
         if oldv is None:
-            self.q[(state, action)] = reward
+            self.q[str((state, action))] = reward
         else:
-            self.q[(state, action)] = oldv + self.alpha * (value - oldv)
+            self.q[str((state, action))] = oldv + self.alpha * (value - oldv)
 
     def chooseAction(self, state, return_q=False):
         q = [self.getQ(state, a) for a in self.actions]

@@ -38,8 +38,11 @@ if __name__ == '__main__':
     # Loads parameters from the ROS param server
     # Parameters are stored in a yaml file inside the config directory
     # They are loaded at runtime by the launch file
+    learn_type = 't'
     Alpha = rospy.get_param("alpha")
     Epsilon = rospy.get_param("epsilon")
+    if learn_type == 'e':
+        Epsilon = 0.05
     Gamma = rospy.get_param("gamma")
     epsilon_discount = rospy.get_param("epsilon_discount")
     nepisodes = rospy.get_param("nepisodes")
@@ -55,7 +58,6 @@ if __name__ == '__main__':
             data = json.load(f)
         f.close()
         q = data["qlearn_table"]
-
     # Initialises the algorithm that we are going to use for learning
     qlearn = qlearn.QLearn(actions=range(env.action_space.n),
                            alpha=Alpha, gamma=Gamma, epsilon=Epsilon, q=q)
@@ -65,7 +67,7 @@ if __name__ == '__main__':
     highest_reward = 0
     
     temp_msg = Odometry()
-    while abs(temp_msg.twist.twist.linear.y) <= 0.05:
+    while not(abs(temp_msg.twist.twist.linear.y) > 0.05 or abs(temp_msg.twist.twist.linear.x) > 0.05):
         temp_msg = rospy.wait_for_message('/robot_0/odom', Odometry)
 
     try:
@@ -110,7 +112,8 @@ if __name__ == '__main__':
                 rospy.logdebug("# reward that action gave=>" + str(reward))
                 rospy.logdebug("# episode cumulated_reward=>" + str(cumulated_reward))
                 rospy.logdebug("# State in which we will start next step=>" + str(nextState))
-                qlearn.learn(state, action, reward, nextState)
+                if learn_type != 'e':
+                    qlearn.learn(state, action, reward, nextState)
 
                 if not (done):
                     rospy.logdebug("NOT DONE")

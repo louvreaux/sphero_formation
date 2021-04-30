@@ -6,16 +6,15 @@ epsilon_discount: 0.999
 nepisodes: 10000
 nsteps: 300
 number_splits: 10 #set to change the number of state splits for the continuous problem and also the number of env_variable splits
-
 running_step: 0.1 # Time for each step
 wait_time: 0.1 # Time to wait in the reset phases
 
 #world parameters
 quantization_step: 0.1
-angle_quantization_step: 90.0
+angle_quantization_step: 45.0
 max_velocity: 0.3
 max_pose: 10.0
-max_relative_pose: 2.0 # can be equal to search radius
+max_relative_pose: 1.0 # can be equal to search radius
 max_relative_pose_to_obstacle: 1.0 # can be equal to avoid radius
 too_close: 0.1 
 crowd_radius_q: 0.3

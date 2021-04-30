@@ -44,10 +44,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step))
 
         self.observation_space = spaces.Tuple((
-                    spaces.Box(low = -2*np.pi, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                          # smjer
+                    spaces.Box(low = -2*np.pi, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                     # smjer
                     spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64),                  # najblizi susjed
                     spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64)))                 # pozicija grupiranja
-                    #spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1), dtype = np.float64)))                                          # smjer jata
+                    #spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1), dtype = np.float64)))                                         # smjer jata
                     #spaces.Box(low = -self.rel_obst_pose_max, high = self.rel_obst_pose_max, shape = (10, 2), dtype = np.float64)))    # pozicije prepreka
 
         # We set the reward range, which is not compulsory but here we do it.
@@ -135,8 +135,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             # OVO JE DA NE BUDE BLIZU NAJBLIZEM AGENTU
             dist_to_neighbour = sqrt(observations[1][0]**2 + observations[1][1]**2)
-            if dist_to_neighbour <= self.crowd_radius_q:
-                reward -= 3.0
+            if dist_to_neighbour <= 0.3 and dist_to_neighbour > 0.1:
+                reward += 25 * dist_to_neighbour - 7.5
+            elif dist_to_neighbour <= 0.1:
+                reward -= 5
 
             # OVO JE DA NE BUDE BLIZU PREPRECI
             # arr = observations[4]
@@ -146,19 +148,14 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             # OVO JE DA BUDE BLIZU JATU
             dist_to_flock = sqrt(observations[2][0]**2 + observations[2][1]**2)
-            if dist_to_flock <= 0.7 and dist_to_flock > self.close_radius:
-                reward += -50 * dist_to_flock + 30
-            elif dist_to_flock <= self.close_radius and dist_to_flock > 0.4:
+            if dist_to_flock <= 0.8 and dist_to_flock > 0.7:
+                reward += -100.0 * dist_to_flock + 75.0
+            elif dist_to_flock <= 0.7: #and dist_to_flock > 0.4:
                 reward += 5
-            elif dist_to_flock <= 0.4 and dist_to_flock > 0.2:
-                reward += 50 * dist_to_flock - 15
-            elif dist_to_flock <= 0.2:
-                reward -= 5
-            else:
-                reward -= 5
+
             # OVO JE DA IMA ISTI SMJER
-            #steer_diff = abs(observations[0] - observations[3])
-            reward -= abs(observations[0]) * 3.0
+            if observations[0] != 0.0:
+                reward -= 3.0
         else:
             reward += self.end_episode_points
 
