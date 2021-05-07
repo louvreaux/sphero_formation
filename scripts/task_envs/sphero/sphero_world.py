@@ -8,7 +8,7 @@ from geometry_msgs.msg import Vector3, Twist
 from math import sqrt, cos, sin
 from robot_envs import sphero_env
 
-timestep_limit_per_episode = 300 # Can be any Value
+timestep_limit_per_episode = 2500 # Can be any Value
 
 register(
         id='SpheroWorld-v0',
@@ -148,16 +148,18 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
             # OVO JE DA BUDE BLIZU JATU
             dist_to_flock = sqrt(observations[2][0]**2 + observations[2][1]**2)
-            if dist_to_flock <= 0.8 and dist_to_flock > 0.7:
-                reward += -100.0 * dist_to_flock + 75.0
-            elif dist_to_flock <= 0.7: #and dist_to_flock > 0.4:
+            #if dist_to_flock <= 0.8 and dist_to_flock > 0.6:
+            #    reward -= 5
+            if dist_to_flock <= 0.6 and dist_to_flock > 0.1:
+                reward += -10.0 * dist_to_flock + 6.0
+            elif dist_to_flock <= 0.1:
                 reward += 5
 
             # OVO JE DA IMA ISTI SMJER
             if observations[0] != 0.0:
                 reward -= 3.0
         else:
-            reward += self.end_episode_points
+             reward += self.end_episode_points
 
         rospy.logdebug("reward=" + str(reward))
         self.cumulated_reward += reward

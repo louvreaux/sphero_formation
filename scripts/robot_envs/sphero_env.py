@@ -44,7 +44,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
         # We launch the init function of the Parent Class robot_stage_env.RobotStageEnv
         super(SpheroEnv, self).__init__(robot_name_space=self.robot_name_space)
-        # self.stage.unpauseSim()
+        self.stage.unpauseSim()
 
         # Subscribers
         subs = [mf.Subscriber("robot_5/nearest", OdometryArray), mf.Subscriber("robot_5/avoid", PoseArray)]
@@ -54,8 +54,8 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # Publishers
         self._cmd_vel_pub = rospy.Publisher('robot_5/cmd_vel', Twist, queue_size=1)
 
-        rospy.wait_for_message('robot_5/nearest', OdometryArray)
-        # self.stage.pauseSim()
+        # rospy.wait_for_message('robot_5/nearest', OdometryArray)
+        self.stage.pauseSim()
         
         rospy.logdebug("Finished SpheroEnv INIT...")
         
@@ -93,9 +93,11 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                 if agent_position.norm() < closest_agent_dist:
                     self.closest_agent_pose = np.array([agent_position.x, agent_position.y])
                     closest_agent_dist = agent_position.norm()
-            
+
+            noise = np.random.normal(0.0, 0.03)
+            self.closest_agent_pose = self.closest_agent_pose + np.array([noise, noise])
             temp_var = mean_position/self.num_of_nearest_agents
-            self.direction = np.array([temp_var.x, temp_var.y])
+            self.direction = np.array([temp_var.x, temp_var.y]) + np.array([noise, noise])
 
             temp_var = mean_velocity/self.num_of_nearest_agents
             temp_var.normalize()

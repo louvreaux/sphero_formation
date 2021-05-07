@@ -24,13 +24,13 @@ class StageConnection():
         self.pub4 = rospy.Publisher('robot_4/cmd_pose', Pose2D, queue_size=1)
         self.pub5 = rospy.Publisher('robot_5/cmd_pose', Pose2D, queue_size=1)
 
-        #self.pose_list = [Pose2D(x=0.3, y=0.2), Pose2D(x=-0.3, y=0.2), Pose2D(x=0.3, y=-0.2), Pose2D(x=-0.3, y=-0.2), Pose2D(x=0.0, y=0.0), Pose2D(x=0.0, y=0.4)]
-        self.pose_list = [Pose2D(x=-3.7, y=0.2), Pose2D(x=-4.3, y=0.2), Pose2D(x=-3.7, y=-0.2), Pose2D(x=-4.3, y=-0.2), Pose2D(x=-4.0, y=0.0), Pose2D(x=-4.0, y=0.4)]
-        self.rand_x = -4.0
+        self.pose_list = [Pose2D(x=0.4, y=0.2), Pose2D(x=-0.4, y=0.2), Pose2D(x=0.4, y=-0.3), Pose2D(x=-0.4, y=-0.3), Pose2D(x=0.0, y=0.0), Pose2D(x=0.0, y=0.5)]
+        #self.pose_list = [Pose2D(x=-3.6, y=0.2), Pose2D(x=-4.4, y=0.2), Pose2D(x=-3.6, y=-0.3), Pose2D(x=-4.4, y=-0.3), Pose2D(x=-4.0, y=0.0), Pose2D(x=-4.0, y=0.5)]
+        self.rand_x = 0.0
         self.rand_y = 0.0
 
         self.counter = 0
-        #self.pauseSim()
+        self.pauseSim()
 
     def pauseSim(self):
         rospy.logdebug("PAUSING...")
@@ -50,22 +50,22 @@ class StageConnection():
 
     def resetSim(self):
         rospy.logdebug("RESETING POSITIONS...")
-        if self.counter == 20:
-            random.shuffle(self.pose_list)
+        # if self.counter == 20:
+        random.shuffle(self.pose_list)
 
-            #self.rand_x = (random.random() * 2.0 - 1.0) * 4.0
-            #self.rand_y = (random.random() * 2.0 - 1.0) * 4.0
+        self.rand_x = (random.random() * 2.0 - 1.0) * 4.0
+        self.rand_y = (random.random() * 2.0 - 1.0) * 4.0
 
-            self.counter = 0
-        else:
-            self.counter += 1
+        #     self.counter = 0
+        # else:
+        #     self.counter += 1
 
         temp_pose_list = copy.deepcopy(self.pose_list)
 
-        # for i in range(self.num_of_robots):
+        for i in range(self.num_of_robots):
 
-        #     temp_pose_list[i].x = self.pose_list[i].x + self.rand_x
-        #     temp_pose_list[i].y = self.pose_list[i].y + self.rand_y
+            temp_pose_list[i].x = self.pose_list[i].x + self.rand_x
+            temp_pose_list[i].y = self.pose_list[i].y + self.rand_y
 
         self.pub0.publish(temp_pose_list[0])
         self.pub1.publish(temp_pose_list[1])

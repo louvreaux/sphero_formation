@@ -1,10 +1,10 @@
 #qlearn parameters
 alpha: 0.1
 gamma: 0.7
-epsilon: 0.5
-epsilon_discount: 0.999
-nepisodes: 10000
-nsteps: 300
+epsilon: 0.8
+epsilon_discount: 0.9997
+nepisodes: 20000
+nsteps: 2500
 number_splits: 10 #set to change the number of state splits for the continuous problem and also the number of env_variable splits
 running_step: 0.1 # Time for each step
 wait_time: 0.1 # Time to wait in the reset phases

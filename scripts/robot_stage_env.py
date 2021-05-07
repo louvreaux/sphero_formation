@@ -42,10 +42,10 @@ class RobotStageEnv(gym.Env):
         """
         rospy.logdebug("START STEP OpenAIROS")
 
-        # self.stage.unpauseSim()
+        self.stage.unpauseSim()
         self._set_action(action)
         rospy.sleep(0.1)
-        # self.stage.pauseSim()
+        elf.stage.pauseSim()
         obs = self._get_obs()
         done = self._is_done(obs)
         info = {}
@@ -58,10 +58,9 @@ class RobotStageEnv(gym.Env):
 
     def reset(self):
         rospy.logdebug("Reseting RobotStageEnvironment")
-        self._reset_sim()
+        obs = self._reset_sim()
         self._init_env_variables()
         self._update_episode()
-        obs = self._get_obs()
         # rospy.logwarn(str(obs))
         rospy.logdebug("END Reseting RobotStageEnvironment")
         return obs
@@ -114,12 +113,13 @@ class RobotStageEnv(gym.Env):
         rospy.logdebug("RESET SIM START")
         
         # self.stage.unpauseSim()
-        self._set_init_pose()
-        #self.stage.pauseSim()
-        self.stage.resetSim()
-        # rospy.sleep(0.1)
-        # self.stage.unpauseSim()
+        # self._set_init_pose()
         # self.stage.pauseSim()
+        self.stage.resetSim()
+        self.stage.unpauseSim()
+        obs = self._get_obs()
+        # rospy.sleep(0.11)
+        self.stage.pauseSim()
 
         rospy.logdebug("RESET SIM END")
         return True
