@@ -4,8 +4,11 @@
 
 import math
 import rospy
+import numpy as np
+
 from geometry_msgs.msg import Twist
 from util import Vector2, angle_diff, MAFilter
+from random import randint
 
 
 def get_agent_velocity(agent):
@@ -239,7 +242,7 @@ class Boid(object):
         # Force is not limited so this rule has highest priority.
         return main_direction + safety_direction
 
-    def compute_velocity(self, my_agent, nearest_agents, avoids):
+    def compute_velocity(self, my_agent, nearest_agents, avoids, reset=False):
         """Compute total velocity based on all components."""
 
         # While waiting to start, send zero velocity and decrease counter.
@@ -315,10 +318,18 @@ class Boid(object):
             # self.data_list.append([self.velocity.norm(), self.velocity.arg(),
             #                        filtered.norm(), filtered.arg()])
 
-            # Return the the velocity as Twist message.
+            # Return the the velocity as Twist message
             vel = Twist()
-            vel.linear.x = self.velocity.x
-            vel.linear.y = self.velocity.y
+
+            if reset == True:
+                action = randint(0, 7)
+                theta = action * 45.0 * (np.pi/180.0)
+                new_vel = np.array([-math.sin(-theta), math.cos(-theta)]) * self.max_speed
+                vel.linear.x = new_vel[0]
+                vel.linear.y = new_vel[1]
+            else:
+                vel.linear.x = self.velocity.x
+                vel.linear.y = self.velocity.y
 
             # Pack all components for Rviz visualization.
             # Make sure these keys are the same as the ones in `util.py`.

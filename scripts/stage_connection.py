@@ -3,11 +3,14 @@
 import rospy
 import random
 import copy
+import numpy as np
+
+from math import cos, sin
 
 from std_srvs.srv import Empty
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Vector3
-from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Pose2D, Twist
 
 class StageConnection():
 
@@ -15,6 +18,8 @@ class StageConnection():
 
         self.reset_simulation_proxy = rospy.ServiceProxy('/reset_positions', Empty)
         self.pause_simulation_proxy = rospy.ServiceProxy('/pause_sim', Empty)
+        self.unpause_simulation_proxy = rospy.ServiceProxy('/unpause_sim', Empty)
+
         self.num_of_robots = rospy.get_param('num_of_robots')
 
         self.pub0 = rospy.Publisher('robot_0/cmd_pose', Pose2D, queue_size=1)
@@ -24,13 +29,15 @@ class StageConnection():
         self.pub4 = rospy.Publisher('robot_4/cmd_pose', Pose2D, queue_size=1)
         self.pub5 = rospy.Publisher('robot_5/cmd_pose', Pose2D, queue_size=1)
 
+        self.pub_reset = rospy.Publisher('stage_reset', Bool, queue_size=1)
+
         self.pose_list = [Pose2D(x=0.4, y=0.2), Pose2D(x=-0.4, y=0.2), Pose2D(x=0.4, y=-0.3), Pose2D(x=-0.4, y=-0.3), Pose2D(x=0.0, y=0.0), Pose2D(x=0.0, y=0.5)]
         #self.pose_list = [Pose2D(x=-3.6, y=0.2), Pose2D(x=-4.4, y=0.2), Pose2D(x=-3.6, y=-0.3), Pose2D(x=-4.4, y=-0.3), Pose2D(x=-4.0, y=0.0), Pose2D(x=-4.0, y=0.5)]
         self.rand_x = 0.0
         self.rand_y = 0.0
 
         self.counter = 0
-        self.pauseSim()
+        # self.pauseSim()
 
     def pauseSim(self):
         rospy.logdebug("PAUSING...")
@@ -42,11 +49,11 @@ class StageConnection():
 
     def unpauseSim(self):
         rospy.logdebug("UNPAUSING...")
-        rospy.wait_for_service('/pause_sim')
+        rospy.wait_for_service('/unpause_sim')
         try:
-           self.pause_simulation_proxy()
+           self.unpause_simulation_proxy()
         except rospy.ServiceException as e:
-           print ("/pause_sim service call failed")
+           print ("/unpause_sim service call failed")
 
     def resetSim(self):
         rospy.logdebug("RESETING POSITIONS...")
@@ -74,7 +81,7 @@ class StageConnection():
         self.pub4.publish(temp_pose_list[4])
         self.pub5.publish(temp_pose_list[5])
 
-        # rospy.wait_for_service('/reset_positions')
+        self.pub_reset.publish(True)
         # try:
         #     self.reset_simulation_proxy()
         # except rospy.ServiceException as e:

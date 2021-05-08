@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#from numba import jit, cuda
+from numba import jit, cuda
 from task_envs.sphero import sphero_world1
 
 import time
@@ -7,18 +7,15 @@ import os
 import json
 import random
 import numpy as np
+import gym
+import rospy
 from keras.models import Sequential, load_model
 from keras.optimizers import RMSprop
 from keras.layers import Dense, Dropout
 from collections import deque
 
-import matplotlib.pyplot as plt
 import sys
 import signal
-
-
-
-LIVE_PLOT = False  # Rise a new window to plot process while training
 
 
 class Agent:
@@ -29,7 +26,7 @@ class Agent:
     def __init__(self, stateSize, actionSize):
         self.isTrainActive = True # Train model (Make it False for just testing)
         self.loadModel = False  # Load model from file
-        self.loadEpisodeFrom = 650  # Load Xth episode from file
+        self.loadEpisodeFrom = 0  # Load Xth episode from file
         self.episodeCount = 40000  # Total episodes
         self.stateSize = stateSize  # Step size get from env
         self.actionSize = actionSize  # Action size get from env
@@ -41,7 +38,7 @@ class Agent:
         self.epsilonDecay = 0.9975  # Epsilon decay value
         self.epsilonMin = 0.05  # Epsilon minimum value
         self.batchSize = 64  # Size of a miniBatch(64)
-        self.learnStart = 100000  # Start to train model from this step(100000)
+        self.learnStart = 1000 #50000  # Start to train model from this step(100000)
         self.memory = deque(maxlen=200000)  # Main memory to keep batches
         self.timeOutLim = 200  # Maximum step size for each episode(1400)
         self.savePath = '/home/louvreaux/bzvz/src/sphero_formation/training_results/'  # Model save path
@@ -100,7 +97,6 @@ class Agent:
 
         returns action number in int
         '''
-        
         if np.random.rand() <= self.epsilon:  # return random action
             self.qValue = np.zeros(self.actionSize)
             return random.randrange(self.actionSize)
@@ -132,7 +128,6 @@ class Agent:
             reward = miniBatch[i][2]
             nextState = miniBatch[i][3]
             done = miniBatch[i][4]
-
             qValue = self.onlineModel(state.reshape(1, len(state)))
             self.qValue = qValue.numpy()
 
@@ -156,42 +151,12 @@ class Agent:
         self.onlineModel.fit(xBatch, yBatch, batch_size=self.batchSize, epochs=1, verbose=0)
 
 
-class LivePlot():
-    '''
-    Class for live plot while training for episode and score
-    '''
-    def __init__(self):
-        self.x = [0]
-        self.y = [0]
-        self.fig = plt.figure(0)
-    
-    def update(self, x, y, yTitle, text, updtScore=True):
-        if updtScore:
-            self.x.append(x)
-            self.y.append(y)
-
-        self.fig.canvas.set_window_title(text)
-        plt.xlabel('Epoch', fontsize=13)
-        plt.ylabel(yTitle, fontsize=13)
-        plt.style.use('Solarize_Light2')
-        plt.plot(self.x, self.y)
-        plt.draw()
-        plt.pause(0.5)
-        plt.clf()
-
-
 if __name__ == '__main__':
-    if LIVE_PLOT:
-        score_plot = LivePlot()
-
-
 
     env = gym.make('SpheroWorld-v1')
     # get action and state sizes
-    print(env.state_space)
-    great = stake
-    stateSize = range(env.state_space.n)
-    actionSize = range(env.action_space.n)
+    stateSize = len(env.observation_space.high)
+    actionSize = env.action_space.n
 
     # Create an agent
     agent = Agent(stateSize, actionSize)
@@ -219,7 +184,7 @@ if __name__ == '__main__':
 
             action = agent.calcAction(state)
             nextState, reward, done, info = env.step(action)
-
+            env.pause()
 
             if score+reward > 10000 or score+reward < -10000:
                 print("Error Score is too high or too low! Resetting...")
@@ -242,8 +207,6 @@ if __name__ == '__main__':
 
             inform_text = avg_max_q_val_text + reward_text + action_text
             
-            if LIVE_PLOT:
-                score_plot.update(episode, score, "Score", inform_text, updtScore=False)
             
             # Save model to file
             if agent.isTrainActive and episode % agent.saveModelAtEvery == 0:
@@ -269,9 +232,6 @@ if __name__ == '__main__':
                 h, m = divmod(m, 60)
 
                 print('Ep: {} | AvgMaxQVal: {:.2f} | CScore: {:.2f} | Mem: {} | Epsilon: {:.2f} | Time: {}:{}:{}'.format(episode, avg_max_q, score, len(agent.memory), agent.epsilon, h, m, s))
-                
-                if LIVE_PLOT:
-                    score_plot.update(episode, score, "Score", inform_text, updtScore=True)
 
                 paramKeys = ['epsilon', 'score', 'memory', 'time', 'averageQ']
                 paramValues = [agent.epsilon, score, len(agent.memory), h, avg_max_q]
@@ -281,7 +241,7 @@ if __name__ == '__main__':
             stepCounter += 1
             if stepCounter % agent.targetUpdateCount == 0:
                 agent.updateTargetModel()
-
+            env.unpause()
         # Epsilon decay
         if agent.epsilon > agent.epsilonMin:
             agent.epsilon *= agent.epsilonDecay

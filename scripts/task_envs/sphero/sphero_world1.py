@@ -116,11 +116,11 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 				flock_steer = 0.0
 			steer_angle_diff = agent_steer - flock_steer
 
-			if sqrt(closest_agent_pose[0]**2 + closest_agent_pose[1]**2) <= self.too_close:
+			if sqrt(closest_neighbour[0]**2 + closest_neighbour[1]**2) <= self.too_close:
 				self._episode_done = True
 				# self.crash = True
 
-			observations = np.array([steer_angle_diff, closest_agent_pose[0], closest_agent_pose[1], flock_pose[0], flock_pose[1]])
+			observations = np.array([steer_angle_diff, closest_neighbour[0], closest_neighbour[1], flock_pose[0], flock_pose[1]])
 			self.last_obs = observations
 		else:
 			self._episode_done = True
@@ -146,7 +146,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		if not done:
 
 			# OVO JE DA NE BUDE BLIZU NAJBLIZEM AGENTU
-			dist_to_neighbour = sqrt(observations[1][0]**2 + observations[1][1]**2)
+			dist_to_neighbour = sqrt(observations[1]**2 + observations[2]**2)
 			if dist_to_neighbour <= 0.3 and dist_to_neighbour > 0.1:
 				reward += 25 * dist_to_neighbour - 7.5
 			elif dist_to_neighbour <= 0.1:
@@ -159,7 +159,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			#         reward -=  5.0
 
 			# OVO JE DA BUDE BLIZU JATU
-			dist_to_flock = sqrt(observations[2][0]**2 + observations[2][1]**2)
+			dist_to_flock = sqrt(observations[3]**2 + observations[4]**2)
 			#if dist_to_flock <= 0.8 and dist_to_flock > 0.6:
 			#    reward -= 5
 			if dist_to_flock <= 0.6 and dist_to_flock > 0.1:

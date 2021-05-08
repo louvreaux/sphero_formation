@@ -5,6 +5,7 @@ import numpy as np
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Twist, Pose, PoseArray
 from sphero_formation.msg import OdometryArray
+from nav_msgs.msg import Odometry
 
 import robot_stage_env
 from util import Vector2
@@ -38,13 +39,15 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
     def __init__(self):
 
+        rospy.init_node("sphero_dqlearn", anonymous=True, log_level=rospy.ERROR)
+
         rospy.logdebug("Start SpheroEnv INIT...")
 
         self.robot_name_space = "robot_5"
 
         # We launch the init function of the Parent Class robot_stage_env.RobotStageEnv
         super(SpheroEnv, self).__init__(robot_name_space=self.robot_name_space)
-        self.stage.unpauseSim()
+        # self.stage.unpauseSim()
 
         # Subscribers
         subs = [mf.Subscriber("robot_5/nearest", OdometryArray), mf.Subscriber("robot_5/avoid", PoseArray)]
@@ -54,8 +57,11 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # Publishers
         self._cmd_vel_pub = rospy.Publisher('robot_5/cmd_vel', Twist, queue_size=1)
 
-        # rospy.wait_for_message('robot_5/nearest', OdometryArray)
-        self.stage.pauseSim()
+        temp_msg = Odometry()
+        while not(abs(temp_msg.twist.twist.linear.y) > 0.05 or abs(temp_msg.twist.twist.linear.x) > 0.05):
+            temp_msg = rospy.wait_for_message('/robot_0/odom', Odometry)
+
+        # self.stage.pauseSim()
         
         rospy.logdebug("Finished SpheroEnv INIT...")
         
@@ -96,10 +102,11 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
             noise = np.random.normal(0.0, 0.03)
             self.closest_agent_pose = self.closest_agent_pose + np.array([noise, noise])
-            temp_var = mean_position/self.num_of_nearest_agents
-            self.direction = np.array([temp_var.x, temp_var.y]) + np.array([noise, noise])
+            temp_var = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents
+            self.direction = temp_var + np.array([noise, noise])
 
-            temp_var = mean_velocity/self.num_of_nearest_agents
+            temp_var = np.array([mean_velocity.x, mean_velocity.y])/self.num_of_nearest_agents
+            temp_var = Vector2(x=temp_var[0], y=temp_var[1])
             temp_var.normalize()
             self.steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
             if temp_var.x < 0:
