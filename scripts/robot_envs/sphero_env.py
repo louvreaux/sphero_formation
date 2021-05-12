@@ -83,9 +83,9 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
            self.agent_steer += np.pi                                     # SMJER GIBANJA NASEG AGENTA
 
         self.closest_obstacles = np.ones((10,2))                         # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
-        self.closest_agent_pose = np.ones(2)                             # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
-        self.direction = np.ones(2)                                      # RELATIVNA SREDNJA POZICIJA SUSJEDA
-        self.steer =  10.0                                               # RELATIVNA SREDNJA BRZINA SUSJEDA
+        self.closest_neighbour = np.ones(2)                              # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
+        self.flock_pose = np.ones(2)                                     # RELATIVNA SREDNJA POZICIJA SUSJEDA
+        self.flock_vel =  np.ones(1)                                     # RELATIVNA SREDNJA BRZINA SUSJEDA
         self.num_of_nearest_agents = len(nearest_agents)
 
         # IZRACUN PROSJECNE POZICIJE I BRZINE NAJBLIZIH AGENATA
@@ -97,20 +97,34 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                 mean_velocity += agent_velocity
 
                 if agent_position.norm() < closest_agent_dist:
-                    self.closest_agent_pose = np.array([agent_position.x, agent_position.y])
+                    self.closest_neighbour = np.array([agent_position.x, agent_position.y])
                     closest_agent_dist = agent_position.norm()
 
             noise = np.random.normal(0.0, 0.03)
-            self.closest_agent_pose = self.closest_agent_pose + np.array([noise, noise])
-            temp_var = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents
-            self.direction = temp_var + np.array([noise, noise])
 
+            # NAJBLIZI SUSJED
+            self.closest_neighbour = self.closest_neighbour + np.array([noise, noise])              # [X, Y] 
+            temp_dist = np.sqrt(self.closest_neighbour[0]**2 + self.closest_neighbour[1]**2)
+            temp_angle = np.arccos(self.closest_neighbour[1]) / temp_dist
+            if self.closest_neighbour[0] < 0:
+                temp_angle += np.pi
+            self.closest_neighbour = np.array([temp_angle, temp_dist])                              # [kut, udaljenost]
+
+            # SREDNJA POZCIJA JATA
+            self.flock_pose = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents + np.array([noise, noise])   # [X, Y]
+            temp_dist = np.sqrt(self.flock_pose[0]**2 + self.flock_pose[1]**2) / temp_dist
+            temp_angle = np.arccos(self.flock_pose[1])
+            if self.flock_pose[0] < 0:
+                temp_angle += np.pi
+            self.flock_pose = np.array([temp_angle, temp_dist])                                      # [kut, udaljenost]
+
+            # SMJER (KUT) USREDNJENE BRZINE JATA
             temp_var = np.array([mean_velocity.x, mean_velocity.y])/self.num_of_nearest_agents
             temp_var = Vector2(x=temp_var[0], y=temp_var[1])
             temp_var.normalize()
-            self.steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
+            self.flock_vel = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
             if temp_var.x < 0:
-                self.steer += np.pi
+                self.flock_vel += np.pi
 
 
         # IZRACUN NAJBLIZIH PREPREKA
@@ -170,4 +184,4 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # TU JE BILA FUNKCIJA KOJA CEKA DA ROBOT PROMIJENI POZICIJU TEMELJEM AKCIJE
     def get_callback(self):
 
-        return self.agent_steer, self.closest_agent_pose, self.direction, self.steer, self.closest_obstacles, self.num_of_nearest_agents
+        return self.agent_steer, self.closest_neighbour, self.flock_pose, self.flock_vel, self.closest_obstacles, self.num_of_nearest_agents

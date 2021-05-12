@@ -10,10 +10,8 @@ Potrebno je instalirati _openai gym_ paket:
 ```bash
 pip install gym
 ```
-Također, _FFmpef_ kako bi se graf mogao spremiti kao video/gif:
-```bash
-sudo apt install ffmpeg
-``` 
+Pratiti ove upute za instalaciju potrebnih stvari za DQN: https://github.com/bhctsntrk/mantis_ddqn_navigation
+
 ## O paketu
 Ovaj repozitorij dodatno sadrži nekoliko skripti koje povezuju RL sa ROS-om i Stage simulatorom
 1. _stage\_connection.py_ - klasa koja sadrži _pause, unpause, reset_ funkcije povezane sa Stage simulatorom (relikvija _openai\_ros_ paketa, moguće da će biti izbačena u budućnosti)

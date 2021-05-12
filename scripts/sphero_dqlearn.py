@@ -38,7 +38,7 @@ class Agent:
         self.epsilonDecay = 0.9975  # Epsilon decay value
         self.epsilonMin = 0.05  # Epsilon minimum value
         self.batchSize = 64  # Size of a miniBatch(64)
-        self.learnStart = 1000 #50000  # Start to train model from this step(100000)
+        self.learnStart = 50000 # Start to train model from this step(100000)
         self.memory = deque(maxlen=200000)  # Main memory to keep batches
         self.timeOutLim = 200  # Maximum step size for each episode(1400)
         self.savePath = '/home/louvreaux/bzvz/src/sphero_formation/training_results/'  # Model save path
@@ -236,6 +236,7 @@ if __name__ == '__main__':
                 paramKeys = ['epsilon', 'score', 'memory', 'time', 'averageQ']
                 paramValues = [agent.epsilon, score, len(agent.memory), h, avg_max_q]
                 paramDictionary = dict(zip(paramKeys, paramValues))
+                env.unpause()
                 break
 
             stepCounter += 1

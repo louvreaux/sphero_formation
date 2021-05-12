@@ -43,8 +43,8 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		# Define action and observation space
 		self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step))
 
-		self.observation_space = spaces.Box(low=np.array([-2*np.pi, -self.rel_pose_max, -self.rel_pose_max, -self.rel_pose_max, -self.rel_pose_max]), 
-											high=np.array([2*np.pi, self.rel_pose_max, self.rel_pose_max, self.rel_pose_max, self.rel_pose_max]), 
+		self.observation_space = spaces.Box(low=np.array([-2*np.pi, -2*np.pi, 0.0, -2*np.pi, 0.0]), 
+											high=np.array([2*np.pi, 2*np.pi, self.rel_pose_max, 2*np.pi, self.rel_pose_max]), 
 											dtype=np.float64)
 
 		# We set the reward range, which is not compulsory but here we do it.
@@ -55,7 +55,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		rospy.logdebug("OBSERVATION SPACES TYPE===>"+str(self.observation_space))
 
 		self.cumulated_steps = 0.0
-		self.last_obs = ()
+		self.last_obs = np.array([])
 
 		# Here we will add any init functions prior to starting the MyRobotEnv
 		super(SpheroWorldEnv, self).__init__()
@@ -116,7 +116,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 				flock_steer = 0.0
 			steer_angle_diff = agent_steer - flock_steer
 
-			if sqrt(closest_neighbour[0]**2 + closest_neighbour[1]**2) <= self.too_close:
+			if closest_neighbour[1] <= self.too_close:
 				self._episode_done = True
 				# self.crash = True
 
@@ -145,11 +145,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
 		if not done:
 
-			# OVO JE DA NE BUDE BLIZU NAJBLIZEM AGENTU
-			dist_to_neighbour = sqrt(observations[1]**2 + observations[2]**2)
-			if dist_to_neighbour <= 0.3 and dist_to_neighbour > 0.1:
-				reward += 25 * dist_to_neighbour - 7.5
-			elif dist_to_neighbour <= 0.1:
+			# NEMOJ ICI PREBLIZU SUSJEDU
+			if observations[2] <= 0.3 and observations[2] > 0.1:
+				reward += 25 * observations[2] - 7.5
+			elif observations[2] <= 0.1:
 				reward -= 5
 
 			# OVO JE DA NE BUDE BLIZU PREPRECI
@@ -158,13 +157,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			#     if sqrt(arr[i][0]**2 + arr[i][1]**2) <= self.avoid_radius_q:
 			#         reward -=  5.0
 
-			# OVO JE DA BUDE BLIZU JATU
-			dist_to_flock = sqrt(observations[3]**2 + observations[4]**2)
-			#if dist_to_flock <= 0.8 and dist_to_flock > 0.6:
-			#    reward -= 5
-			if dist_to_flock <= 0.6 and dist_to_flock > 0.1:
-				reward += -10.0 * dist_to_flock + 6.0
-			elif dist_to_flock <= 0.1:
+			# DRZI SE BLIZU JATA
+			if observations[4] <= 0.6 and observations[4] > 0.1:
+				reward += -10.0 * observations[4] + 6.0
+			elif observations[4] <= 0.1:
 				reward += 5
 
 			# OVO JE DA IMA ISTI SMJER
