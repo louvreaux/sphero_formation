@@ -243,6 +243,7 @@ if __name__ == '__main__':
             if stepCounter % agent.targetUpdateCount == 0:
                 agent.updateTargetModel()
             env.unpause()
+            # print("------------------------------------------")
         # Epsilon decay
         if agent.epsilon > agent.epsilonMin:
             agent.epsilon *= agent.epsilonDecay

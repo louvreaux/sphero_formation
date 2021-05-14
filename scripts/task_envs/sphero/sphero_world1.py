@@ -86,6 +86,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		based on the action number given.
 		:param action: The action integer that set s what movement to do next.
 		"""
+		# rospy.logerr("ACTION: " + str(action))
 		
 		rospy.logdebug("Start Set Action ==>"+str(action))
 		# We convert the actions to speed movements to send to the parent class CubeSingleDiskEnv
@@ -115,6 +116,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			if flock_steer == 360.0:
 				flock_steer = 0.0
 			steer_angle_diff = agent_steer - flock_steer
+			steer_angle_diff = steer_angle_diff * np.pi / 180.0
 
 			if closest_neighbour[1] <= self.too_close:
 				self._episode_done = True
@@ -128,6 +130,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		rospy.logdebug("Observations==>"+str(observations))
 		rospy.logdebug("END Get Observation ==>")
 		rospy.logwarn(observations)
+		# rospy.logerr("OBSERVATIONS: " + str(observations))
 
 		return observations
 		
@@ -150,6 +153,8 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 				reward += 25 * observations[2] - 7.5
 			elif observations[2] <= 0.1:
 				reward -= 5
+			# temp = reward
+			# rospy.logerr("CLOSEST NEIGHBOUR REWARD: " + str(reward))
 
 			# OVO JE DA NE BUDE BLIZU PREPRECI
 			# arr = observations[4]
@@ -162,10 +167,13 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 				reward += -10.0 * observations[4] + 6.0
 			elif observations[4] <= 0.1:
 				reward += 5
+			# rospy.logerr("FLOCK REWARD: " + str(reward - temp))
+			# temp = reward
 
 			# OVO JE DA IMA ISTI SMJER
 			if observations[0] != 0.0:
 				reward -= 3.0
+			# rospy.logerr("STEER REWARD: " + str(reward - temp))
 		else:
 			 reward += self.end_episode_points
 

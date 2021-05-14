@@ -67,28 +67,29 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         
 
     def _callback(self, *data):
-        my_agent = data[0].array[0]         # odometry data for this agent is first in list
-        nearest_agents = data[0].array[1:]  # odometry data for neighbors follows
-        obstacles = data[1].poses           # store obstacles
+        my_agent = data[0].array[0]         # Odometry data for our agent is first in list
+        nearest_agents = data[0].array[1:]  # Odometry data for neighbors follows
+        obstacles = data[1].poses           # Store obstacles
 
         mean_position = Vector2()
         mean_velocity = Vector2()
         dist_array = np.array([])
         closest_agent_dist = np.inf
 
+        # Get our agent direction angle
         temp_var = get_agent_velocity(my_agent)
         temp_var.normalize()
-        self.agent_steer = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
+        self.agent_steer = np.arccos(temp_var.y) # Angle between [0, 1] and normalized agent steering vector -> we only need y component
         if temp_var.x < 0:
-           self.agent_steer += np.pi                                     # SMJER GIBANJA NASEG AGENTA
+           self.agent_steer += 2*np.pi - self.agent_steer                # We need to take into account that angle between vectors is always the smallest one
 
-        self.closest_obstacles = np.ones((10,2))                         # RELATIVNA POZICIJA NAJBLIZIH PREPREKA
-        self.closest_neighbour = np.ones(2)                              # RELATIVNA POZICIJA NAJBLIZEG SUSJEDA
-        self.flock_pose = np.ones(2)                                     # RELATIVNA SREDNJA POZICIJA SUSJEDA
-        self.flock_vel =  np.ones(1)                                     # RELATIVNA SREDNJA BRZINA SUSJEDA
+        # Init observation variables
+        self.closest_obstacles = np.ones((10,2))                         # Relative position of 10 closest obstacles
+        self.closest_neighbour = np.ones(2)                              # Relative position of closest neighbour
+        self.flock_pose = np.ones(2)                                     # Relative position of flock
+        self.flock_vel =  np.ones(1)                                     # Number of neighbours inside search radius
         self.num_of_nearest_agents = len(nearest_agents)
 
-        # IZRACUN PROSJECNE POZICIJE I BRZINE NAJBLIZIH AGENATA
         if nearest_agents:
             for agent in nearest_agents:
                 agent_position = get_agent_position(agent)
@@ -100,34 +101,36 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                     self.closest_neighbour = np.array([agent_position.x, agent_position.y])
                     closest_agent_dist = agent_position.norm()
 
-            noise = np.random.normal(0.0, 0.03)
+            # noise = np.random.normal(0.0, 0.03)     # Adding some noise for better generalization
 
-            # NAJBLIZI SUSJED
-            self.closest_neighbour = self.closest_neighbour + np.array([noise, noise])              # [X, Y] 
+            # Get closest neighbour observation
+            # self.closest_neighbour = self.closest_neighbour+ np.array([noise, noise])            # [X, Y]
+            # rospy.logerr("CLOSEST NEIGHBOUR X,Y: " + str(self.closest_neighbour))
             temp_dist = np.sqrt(self.closest_neighbour[0]**2 + self.closest_neighbour[1]**2)
-            temp_angle = np.arccos(self.closest_neighbour[1]) / temp_dist
+            temp_angle = np.arccos(self.closest_neighbour[1] / temp_dist)
             if self.closest_neighbour[0] < 0:
-                temp_angle += np.pi
-            self.closest_neighbour = np.array([temp_angle, temp_dist])                              # [kut, udaljenost]
+                temp_angle = 2*np.pi - temp_angle
+            self.closest_neighbour = np.array([temp_angle, temp_dist])                              # [angle, distance]
 
-            # SREDNJA POZCIJA JATA
-            self.flock_pose = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents + np.array([noise, noise])   # [X, Y]
-            temp_dist = np.sqrt(self.flock_pose[0]**2 + self.flock_pose[1]**2) / temp_dist
-            temp_angle = np.arccos(self.flock_pose[1])
+            # Get flock position observation
+            self.flock_pose = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents # + np.array([noise, noise])   # [X, Y]
+            # rospy.logerr("FLOCK POSE X,Y: " + str(self.flock_pose))
+            temp_dist = np.sqrt(self.flock_pose[0]**2 + self.flock_pose[1]**2)
+            temp_angle = np.arccos(self.flock_pose[1] / temp_dist)
             if self.flock_pose[0] < 0:
-                temp_angle += np.pi
-            self.flock_pose = np.array([temp_angle, temp_dist])                                      # [kut, udaljenost]
+                temp_angle = 2*np.pi - temp_angle
+            self.flock_pose = np.array([temp_angle, temp_dist])                                     # [angle, distance]
 
-            # SMJER (KUT) USREDNJENE BRZINE JATA
+            # Get direction angle of flock observation
             temp_var = np.array([mean_velocity.x, mean_velocity.y])/self.num_of_nearest_agents
             temp_var = Vector2(x=temp_var[0], y=temp_var[1])
             temp_var.normalize()
-            self.flock_vel = np.arccos(temp_var.y) # kut izmedju [0, 1] i jedinicnog smjera gibanja => potrebna samo y komponenta
+            self.flock_vel = np.arccos(temp_var.y) 
             if temp_var.x < 0:
-                self.flock_vel += np.pi
+                self.flock_vel = 2 * np.pi - self.flock_vel
 
 
-        # IZRACUN NAJBLIZIH PREPREKA
+        # Get 10 closest obstacles observation
         if obstacles:
             for obst in obstacles:
                 temp_dist = Vector2(x = obst.position.x, y = obst.position.y)
