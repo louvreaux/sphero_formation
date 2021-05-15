@@ -8,7 +8,7 @@ import numpy as np
 from math import cos, sin
 
 from std_srvs.srv import Empty
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Int32
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Pose2D, Twist
 
@@ -29,14 +29,12 @@ class StageConnection():
         self.pub4 = rospy.Publisher('robot_4/cmd_pose', Pose2D, queue_size=1)
         self.pub5 = rospy.Publisher('robot_5/cmd_pose', Pose2D, queue_size=1)
 
-        self.pub_reset = rospy.Publisher('stage_reset', Bool, queue_size=1)
+        self.pub_reset = rospy.Publisher('stage_reset', Int32, queue_size=1)
 
         self.pose_list = [Pose2D(x=0.4, y=0.2), Pose2D(x=-0.4, y=0.2), Pose2D(x=0.4, y=-0.3), Pose2D(x=-0.4, y=-0.3), Pose2D(x=0.0, y=0.0), Pose2D(x=0.0, y=0.5)]
-        #self.pose_list = [Pose2D(x=-3.6, y=0.2), Pose2D(x=-4.4, y=0.2), Pose2D(x=-3.6, y=-0.3), Pose2D(x=-4.4, y=-0.3), Pose2D(x=-4.0, y=0.0), Pose2D(x=-4.0, y=0.5)]
         self.rand_x = 0.0
         self.rand_y = 0.0
 
-        self.counter = 0
         # self.pauseSim()
 
     def pauseSim(self):
@@ -57,15 +55,10 @@ class StageConnection():
 
     def resetSim(self):
         rospy.logdebug("RESETING POSITIONS...")
-        # if self.counter == 20:
         random.shuffle(self.pose_list)
 
         self.rand_x = (random.random() * 2.0 - 1.0) * 4.0
         self.rand_y = (random.random() * 2.0 - 1.0) * 4.0
-
-        #     self.counter = 0
-        # else:
-        #     self.counter += 1
 
         temp_pose_list = copy.deepcopy(self.pose_list)
 
@@ -81,7 +74,8 @@ class StageConnection():
         self.pub4.publish(temp_pose_list[4])
         self.pub5.publish(temp_pose_list[5])
 
-        self.pub_reset.publish(True)
+        pub_msg = Int32(random.randint(0, 7))
+        self.pub_reset.publish(pub_msg)
         # try:
         #     self.reset_simulation_proxy()
         # except rospy.ServiceException as e:

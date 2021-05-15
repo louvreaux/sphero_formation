@@ -76,19 +76,12 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         dist_array = np.array([])
         closest_agent_dist = np.inf
 
-        # Get our agent direction angle
-        temp_var = get_agent_velocity(my_agent)
-        temp_var.normalize()
-        self.agent_steer = np.arccos(temp_var.y) # Angle between [0, 1] and normalized agent steering vector -> we only need y component
-        if temp_var.x < 0:
-           self.agent_steer += 2*np.pi - self.agent_steer                # We need to take into account that angle between vectors is always the smallest one
-
         # Init observation variables
         self.closest_obstacles = np.ones((10,2))                         # Relative position of 10 closest obstacles
         self.closest_neighbour = np.ones(2)                              # Relative position of closest neighbour
         self.flock_pose = np.ones(2)                                     # Relative position of flock
-        self.flock_vel =  np.ones(1)                                     # Number of neighbours inside search radius
-        self.num_of_nearest_agents = len(nearest_agents)
+        self.flock_vel =  1.0                                            # Flock direction angle
+        self.num_of_nearest_agents = len(nearest_agents)                 # Number of neighbours
 
         if nearest_agents:
             for agent in nearest_agents:
@@ -104,7 +97,6 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             # noise = np.random.normal(0.0, 0.03)     # Adding some noise for better generalization
 
             # Get closest neighbour observation
-            # self.closest_neighbour = self.closest_neighbour+ np.array([noise, noise])            # [X, Y]
             # rospy.logerr("CLOSEST NEIGHBOUR X,Y: " + str(self.closest_neighbour))
             temp_dist = np.sqrt(self.closest_neighbour[0]**2 + self.closest_neighbour[1]**2)
             temp_angle = np.arccos(self.closest_neighbour[1] / temp_dist)
@@ -143,6 +135,15 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                 counter += 1
                 if counter >= 10:
                     break
+
+        # Get our agent direction angle
+        temp_var = get_agent_velocity(my_agent)
+        temp_var.normalize()
+
+        temp = np.arccos(temp_var.y) # Angle between [0, 1] and normalized agent steering vector -> we only need y component
+        if temp_var.x < 0:
+           temp = 2*np.pi - temp # We need to take into account that angle between vectors is always the smallest one
+        self.agent_steer = temp
 
     # Methods that the TrainingEnvironment will need to define here as virtual
     # because they will be used in RobotStageEnv GrandParentClass and defined in the
@@ -184,7 +185,10 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         rospy.logdebug("Sphero Twist>>" + str(velocity))
         self._cmd_vel_pub.publish(velocity)
 
-        # TU JE BILA FUNKCIJA KOJA CEKA DA ROBOT PROMIJENI POZICIJU TEMELJEM AKCIJE
-    def get_callback(self):
-
+    def get_callback(self, curr_action, curr_flock_vel):
+        # This is to make sure we observe the action our agent took
+        # Flock velocity check is added because steer action can be the same as last time
+        if curr_action != -1.0:
+            while abs(self.agent_steer - curr_action) > 0.001 or curr_flock_vel == self.flock_vel:
+                pass
         return self.agent_steer, self.closest_neighbour, self.flock_pose, self.flock_vel, self.closest_obstacles, self.num_of_nearest_agents

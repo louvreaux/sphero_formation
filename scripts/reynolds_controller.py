@@ -5,7 +5,7 @@ import rospy
 import pandas as pd
 import message_filters as mf
 
-from std_msgs.msg import Bool
+from std_msgs.msg import Int32
 from dynamic_reconfigure.msg import Config
 from geometry_msgs.msg import Twist, PoseArray
 from visualization_msgs.msg import MarkerArray
@@ -45,7 +45,7 @@ class ReynoldsController(object):
             # Compute agent's velocity and publish the command.
             if self.reset == True:
                 self.reset = False
-                ret_vel, viz = self.agent.compute_velocity(my_agent, nearest_agents, obstacles, True)
+                ret_vel, viz = self.agent.compute_velocity(my_agent, nearest_agents, obstacles, True, self.action)
             else:
                 ret_vel, viz = self.agent.compute_velocity(my_agent, nearest_agents, obstacles)
 
@@ -74,6 +74,7 @@ class ReynoldsController(object):
         self.params_set = True
 
     def reset_callback(self, data):
+        self.action = data.data
         self.reset = True
 
     def __init__(self):
@@ -89,6 +90,7 @@ class ReynoldsController(object):
         self.markers = MarkerSet()
         self.params_set = False
         self.reset = False
+        self.action = -1
 
         # Create a publisher for commands.
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=frequency)
@@ -96,7 +98,7 @@ class ReynoldsController(object):
 
         # Create subscribers.
         rospy.Subscriber('/dyn_reconf/parameter_updates', Config, self.param_callback, queue_size=1)
-        rospy.Subscriber("/stage_reset", Bool, self.reset_callback, queue_size=1)
+        rospy.Subscriber("/stage_reset", Int32, self.reset_callback, queue_size=1)
 
         subs = [mf.Subscriber("nearest", OdometryArray), mf.Subscriber("avoid", PoseArray)]
         self.ts = mf.TimeSynchronizer(subs, 10)

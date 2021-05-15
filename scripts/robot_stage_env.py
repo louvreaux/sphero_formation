@@ -3,10 +3,8 @@ import gym
 
 from gym.utils import seeding
 from stage_connection import StageConnection
-#https://bitbucket.org/theconstructcore/theconstruct_msgs/src/master/msg/RLExperimentInfo.msg
 from sphero_formation.msg import RLExperimentInfo
 
-# https://github.com/openai/gym/blob/master/gym/core.py
 class RobotStageEnv(gym.Env):
 
     def __init__(self, robot_name_space):
@@ -44,7 +42,7 @@ class RobotStageEnv(gym.Env):
 
         # self.stage.unpauseSim()
         self._set_action(action)
-        rospy.sleep(0.1)
+        # rospy.sleep(0.1)
         # self.stage.pauseSim()
         obs = self._get_obs()
         done = self._is_done(obs)
@@ -124,7 +122,7 @@ class RobotStageEnv(gym.Env):
         # self.stage.pauseSim()
         self.stage.resetSim()
         # self.stage.unpauseSim()
-        rospy.sleep(0.11)
+        # rospy.sleep(0.11)
         # self.stage.pauseSim()
 
         rospy.logdebug("RESET SIM END")

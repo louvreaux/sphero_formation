@@ -242,7 +242,7 @@ class Boid(object):
         # Force is not limited so this rule has highest priority.
         return main_direction + safety_direction
 
-    def compute_velocity(self, my_agent, nearest_agents, avoids, reset=False):
+    def compute_velocity(self, my_agent, nearest_agents, avoids, reset=False, action=-1):
         """Compute total velocity based on all components."""
 
         # While waiting to start, send zero velocity and decrease counter.
@@ -300,7 +300,7 @@ class Boid(object):
             
             # OVO JE NOVO DODANO
             #self.velocity.limit(self.max_speed)
-            #self.velocity = Vector2(x = 1.0, y = 0.0)
+            #self.velocity = Vector2(x = -1 * self.max_speed, y = 0.0)
             self.velocity.normalize()
             self.velocity = self.velocity * self.max_speed
 
@@ -322,7 +322,6 @@ class Boid(object):
             vel = Twist()
 
             if reset == True:
-                action = randint(0, 7)
                 theta = action * 45.0 * (np.pi/180.0)
                 new_vel = np.array([-math.sin(-theta), math.cos(-theta)]) * self.max_speed
                 vel.linear.x = new_vel[0]

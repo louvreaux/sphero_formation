@@ -40,7 +40,7 @@ class Agent:
         self.batchSize = 64  # Size of a miniBatch(64)
         self.learnStart = 50000 # Start to train model from this step(100000)
         self.memory = deque(maxlen=200000)  # Main memory to keep batches
-        self.timeOutLim = 200  # Maximum step size for each episode(1400)
+        self.timeOutLim = 1500  # Maximum step size for each episode(1400)
         self.savePath = '/home/louvreaux/bzvz/src/sphero_formation/training_results/'  # Model save path
 
         self.onlineModel = self.initNetwork()
@@ -177,13 +177,16 @@ if __name__ == '__main__':
     for episode in range(agent.loadEpisodeFrom + 1, agent.episodeCount):
         done = False
         state = env.reset()
+        # rospy.logerr("STATE: " + str(state))
         score = 0
         total_max_q = 0
         
         for step in range(1,999999):
-
+            # print("STEP: " + str(step))
             action = agent.calcAction(state)
+            # rospy.logerr("ACTION: " + str(action))
             nextState, reward, done, info = env.step(action)
+            # rospy.logerr("NEXT STATE: " + str(nextState))
             env.pause()
 
             if score+reward > 10000 or score+reward < -10000:
@@ -201,6 +204,7 @@ if __name__ == '__main__':
             score += reward
             state = nextState
 
+            # Display information by steps
             avg_max_q_val_text = "Avg Max Q Val:{:.2f}  | ".format(np.max(agent.qValue))
             reward_text = "Reward:{:.2f}  | ".format(reward)
             action_text = "Action:{:.2f}  | ".format(action)
@@ -227,7 +231,7 @@ if __name__ == '__main__':
 
                 avg_max_q = total_max_q / step
 
-                # Infor user
+                # Display information by episodes
                 m, s = divmod(int(time.time() - startTime), 60)
                 h, m = divmod(m, 60)
 
