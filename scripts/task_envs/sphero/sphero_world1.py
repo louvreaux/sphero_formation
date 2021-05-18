@@ -61,6 +61,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
 		self.curr_action = -1.0
 		self.curr_flock_steer = -1.0
+		self.curr_flock_dist = -1.0
 		
 		# Init first state while starting learning
 		self.first_state = True
@@ -117,8 +118,9 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		:return:
 		"""
 		rospy.logdebug("Start Get Observation ==>")
-		agent_steer, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours = self.get_callback(self.curr_action, self.curr_flock_steer)
+		agent_steer, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours = self.get_callback(self.curr_action, self.curr_flock_steer, self.curr_flock_dist)
 		self.curr_flock_steer = flock_steer
+		self.curr_flock_dist = flock_pose[1]
 
 		# If our agent didn't loose the flock, examine observations
 		if num_of_neighbours > 0 or self.first_state == True:
@@ -195,6 +197,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			# Punish not going the same way as flock
 			if abs(observations[0]) != 0.0:
 				reward -= 5.0 / (2 * np.pi) * abs(observations[0])
+			# reward += 5.0 - 5.0 / (2 * np.pi) * abs(observations[0])
 			# rospy.logerr("STEER REWARD: " + str(reward - temp))
 		else:
 			 reward -= 10.0

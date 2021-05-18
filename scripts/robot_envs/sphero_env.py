@@ -185,10 +185,10 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         rospy.logdebug("Sphero Twist>>" + str(velocity))
         self._cmd_vel_pub.publish(velocity)
 
-    def get_callback(self, curr_action, curr_flock_vel):
+    def get_callback(self, curr_action, curr_flock_vel, curr_flock_dist):
         # This is to make sure we observe the action our agent took
         # Flock velocity check is added because steer action can be the same as last time
         if curr_action != -1.0:
-            while abs(self.agent_steer - curr_action) > 0.001 or curr_flock_vel == self.flock_vel:
+            while abs(self.agent_steer - curr_action) > 0.001 or curr_flock_vel == self.flock_vel or curr_flock_dist == self.flock_pose[1]:
                 pass
         return self.agent_steer, self.closest_neighbour, self.flock_pose, self.flock_vel, self.closest_obstacles, self.num_of_nearest_agents
