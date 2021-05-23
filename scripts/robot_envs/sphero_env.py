@@ -33,6 +33,21 @@ def get_obst_position(obst):
     pos.y = obst.position.y
     return pos
 
+def get_distance(array):
+    
+    return np.sqrt(array[0]**2 + array[1]**2)
+
+def get_angle(array, dist):
+    if dist == 0.0:
+        angle = 0.0
+    else:
+        angle = np.arccos(array[0] / dist)
+        if array[1] < 0.0:
+            angle = 2 * np.pi - angle
+
+    return angle
+
+
 class SpheroEnv(robot_stage_env.RobotStageEnv):
     """Superclass for all CubeSingleDisk environments.
     """
@@ -44,6 +59,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         rospy.logdebug("Start SpheroEnv INIT...")
 
         self.robot_name_space = "robot_5"
+        self.isCallback = False
 
         # We launch the init function of the Parent Class robot_stage_env.RobotStageEnv
         super(SpheroEnv, self).__init__(robot_name_space=self.robot_name_space)
@@ -76,13 +92,33 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         dist_array = np.array([])
         closest_agent_dist = np.inf
 
-        # Init observation variables
-        self.closest_obstacles = np.ones((10,2))                         # Relative position of 10 closest obstacles
-        self.closest_neighbour = np.ones(2)                              # Relative position of closest neighbour
-        self.flock_pose = np.ones(2)                                     # Relative position of flock
-        self.flock_vel =  1.0                                            # Flock direction angle
-        self.num_of_nearest_agents = len(nearest_agents)                 # Number of neighbours
+        # Observation variables
+        # self.closest_obstacles     =>  Relative position of 10 closest obstacles
+        # self.closest_neighbour     =>  Relative position of closest neighbour
+        # self.flock_pose            =>  Relative position of flock
+        # self.flock_steer           =>  Flock direction angle
+        # self.agent_steer           =>  Agent direction angle
+        # self.steer_diff            =>  Flock - agent steer angle difference
+        # self.num_of_nearest_agents =>  Number of neighbours
 
+        # Get 10 closest obstacles observation
+        self.closest_obstacles = np.ones((10, 2))
+        if obstacles:
+            for obst in obstacles:
+                temp_dist = Vector2(x = obst.position.x, y = obst.position.y)
+                dist_array = np.append(dist_array, temp_dist.norm())
+
+            counter = 0
+
+            for x in np.argsort(dist_array):
+                self.closest_obstacles[counter] = np.array([obstacles[x].position.x, obstacles[x].position.y])
+                counter += 1
+                if counter >= 10:
+                    break
+        
+        self.num_of_nearest_agents = len(nearest_agents)
+        
+        # Get flock observations
         if nearest_agents:
             for agent in nearest_agents:
                 agent_position = get_agent_position(agent)
@@ -97,53 +133,37 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             # noise = np.random.normal(0.0, 0.03)     # Adding some noise for better generalization
 
             # Get closest neighbour observation
-            # rospy.logerr("CLOSEST NEIGHBOUR X,Y: " + str(self.closest_neighbour))
-            temp_dist = np.sqrt(self.closest_neighbour[0]**2 + self.closest_neighbour[1]**2)
-            temp_angle = np.arccos(self.closest_neighbour[1] / temp_dist)
-            if self.closest_neighbour[0] < 0:
-                temp_angle = 2*np.pi - temp_angle
-            self.closest_neighbour = np.array([temp_angle, temp_dist])                              # [angle, distance]
+            temp_dist = get_distance(self.closest_neighbour)
+            temp_angle = get_angle(self.closest_neighbour, temp_dist)
+            self.closest_neighbour = np.array([temp_angle, temp_dist]) # [angle, distance]
 
             # Get flock position observation
-            self.flock_pose = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents # + np.array([noise, noise])   # [X, Y]
-            # rospy.logerr("FLOCK POSE X,Y: " + str(self.flock_pose))
-            temp_dist = np.sqrt(self.flock_pose[0]**2 + self.flock_pose[1]**2)
-            temp_angle = np.arccos(self.flock_pose[1] / temp_dist)
-            if self.flock_pose[0] < 0:
-                temp_angle = 2*np.pi - temp_angle
-            self.flock_pose = np.array([temp_angle, temp_dist])                                     # [angle, distance]
+            temp_var = np.array([mean_position.x, mean_position.y])/self.num_of_nearest_agents # [X, Y]
+            temp_dist = get_distance(temp_var)
+            temp_angle = get_angle(temp_var, temp_dist)
+            self.flock_pose = np.array([temp_angle, temp_dist])  # [angle, distance]
 
             # Get direction angle of flock observation
-            temp_var = np.array([mean_velocity.x, mean_velocity.y])/self.num_of_nearest_agents
-            temp_var = Vector2(x=temp_var[0], y=temp_var[1])
-            temp_var.normalize()
-            self.flock_vel = np.arccos(temp_var.y) 
-            if temp_var.x < 0:
-                self.flock_vel = 2 * np.pi - self.flock_vel
+            temp_var_flock = np.array([mean_velocity.x, mean_velocity.y])/self.num_of_nearest_agents
+            temp_dist = get_distance(temp_var_flock)
+            temp_angle = get_angle(temp_var_flock, temp_dist)
+            self.flock_steer = temp_angle
+            
+            # Get our agent direction angle
+            temp_var_agent = get_agent_velocity(my_agent)
+            temp_var_agent = np.array([temp_var_agent.x, temp_var_agent.y])
+            temp_dist = get_distance(temp_var_agent)
+            temp_angle = get_angle(temp_var_agent, temp_dist)
+            self.agent_steer = temp_angle
 
+            # Get steer angle difference
+            self.steer_diff = np.arctan2(temp_var_flock[1], temp_var_flock[0]) - np.arctan2(temp_var_agent[1], temp_var_agent[0])
+            if self.steer_diff > np.pi:
+                self.steer_diff -= 2 * np.pi
+            elif self.steer_diff <= -np.pi:
+                self.steer_diff += 2 * np.pi
 
-        # Get 10 closest obstacles observation
-        if obstacles:
-            for obst in obstacles:
-                temp_dist = Vector2(x = obst.position.x, y = obst.position.y)
-                dist_array = np.append(dist_array, temp_dist.norm())
-
-            counter = 0
-
-            for x in np.argsort(dist_array):
-                self.closest_obstacles[counter] = np.array([obstacles[x].position.x, obstacles[x].position.y])
-                counter += 1
-                if counter >= 10:
-                    break
-
-        # Get our agent direction angle
-        temp_var = get_agent_velocity(my_agent)
-        temp_var.normalize()
-
-        temp = np.arccos(temp_var.y) # Angle between [0, 1] and normalized agent steering vector -> we only need y component
-        if temp_var.x < 0:
-           temp = 2*np.pi - temp # We need to take into account that angle between vectors is always the smallest one
-        self.agent_steer = temp
+        self.isCallback = True
 
     # Methods that the TrainingEnvironment will need to define here as virtual
     # because they will be used in RobotStageEnv GrandParentClass and defined in the
@@ -185,10 +205,10 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         rospy.logdebug("Sphero Twist>>" + str(velocity))
         self._cmd_vel_pub.publish(velocity)
 
-    def get_callback(self, curr_action, curr_flock_vel, curr_flock_dist):
+    def get_callback(self):
         # This is to make sure we observe the action our agent took
-        # Flock velocity check is added because steer action can be the same as last time
-        if curr_action != -1.0:
-            while abs(self.agent_steer - curr_action) > 0.001 or curr_flock_vel == self.flock_vel or curr_flock_dist == self.flock_pose[1]:
-                pass
-        return self.agent_steer, self.closest_neighbour, self.flock_pose, self.flock_vel, self.closest_obstacles, self.num_of_nearest_agents
+        # Flock velocity and pose check is added because steer action can be the same as step before
+        while not self.isCallback:
+            pass
+        self.isCallback = False
+        return self.steer_diff, self.closest_neighbour, self.flock_pose, self.flock_steer, self.closest_obstacles, self.num_of_nearest_agents

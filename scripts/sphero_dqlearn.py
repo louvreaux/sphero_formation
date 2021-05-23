@@ -4,6 +4,7 @@ from task_envs.sphero import sphero_world1
 
 import time
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' # Turn off useless keras info
 import json
 import random
 import numpy as np
@@ -12,6 +13,7 @@ import rospy
 from keras.models import Sequential, load_model
 from keras.optimizers import RMSprop
 from keras.layers import Dense, Dropout
+from keras.initializers import HeUniform
 from collections import deque
 
 import sys
@@ -38,10 +40,10 @@ class Agent:
         self.epsilonDecay = 0.9975  # Epsilon decay value
         self.epsilonMin = 0.05  # Epsilon minimum value
         self.batchSize = 64  # Size of a miniBatch(64)
-        self.learnStart = 50000 # Start to train model from this step(100000)
+        self.learnStart = 1000 # Start to train model from this step(100000)
         self.memory = deque(maxlen=200000)  # Main memory to keep batches
         self.timeOutLim = 1500  # Maximum step size for each episode(1400)
-        self.savePath = '/home/louvreaux/bzvz/src/sphero_formation/training_results/'  # Model save path
+        self.savePath = '/home/lovro/sphero_ws/src/sphero_formation/training_results/'  # Model save path
 
         self.onlineModel = self.initNetwork()
         self.targetModel = self.initNetwork()
@@ -63,11 +65,11 @@ class Agent:
         '''
         model = Sequential()
 
-        model.add(Dense(64, input_shape=(self.stateSize,), activation="relu", kernel_initializer="lecun_uniform"))
-        model.add(Dense(64, activation="relu", kernel_initializer="lecun_uniform"))
+        model.add(Dense(64, input_shape=(self.stateSize,), activation="relu", kernel_initializer=HeUniform()))
+        model.add(Dense(64, activation="relu", kernel_initializer=HeUniform()))
         model.add(Dropout(0.3))
-        model.add(Dense(self.actionSize, activation="linear", kernel_initializer="lecun_uniform"))
-        model.compile(loss="mse", optimizer=RMSprop(lr=self.learningRate, rho=0.9, epsilon=1e-06))
+        model.add(Dense(self.actionSize, activation="linear", kernel_initializer=HeUniform()))
+        model.compile(loss="huber", optimizer=RMSprop(learning_rate=self.learningRate, rho=0.9, epsilon=1e-06))
         model.summary()
 
         return model
@@ -154,6 +156,7 @@ class Agent:
 if __name__ == '__main__':
 
     env = gym.make('SpheroWorld-v1')
+    env.pause()
     # get action and state sizes
     stateSize = len(env.observation_space.high)
     actionSize = env.action_space.n
@@ -171,24 +174,25 @@ if __name__ == '__main__':
             param = json.load(outfile)
             agent.epsilon = param.get('epsilon')
 
-
     stepCounter = 0
     startTime = time.time()
+    every_nth = 0
     for episode in range(agent.loadEpisodeFrom + 1, agent.episodeCount):
         done = False
+        env.unpause()
         state = env.reset()
-        # rospy.logerr("STATE: " + str(state))
+        env.pause()
+        #rospy.logerr("STATE: " + str(state))
         score = 0
         total_max_q = 0
         
         for step in range(1,999999):
             # print("STEP: " + str(step))
             action = agent.calcAction(state)
-            # rospy.logerr("ACTION: " + str(action))
+            env.unpause()
             nextState, reward, done, info = env.step(action)
-            # rospy.logerr("NEXT STATE: " + str(nextState))
+            #rospy.logerr("NEXT STATE: " + str(nextState))
             env.pause()
-
             if score+reward > 10000 or score+reward < -10000:
                 print("Error Score is too high or too low! Resetting...")
                 break
@@ -240,13 +244,13 @@ if __name__ == '__main__':
                 paramKeys = ['epsilon', 'score', 'memory', 'time', 'averageQ']
                 paramValues = [agent.epsilon, score, len(agent.memory), h, avg_max_q]
                 paramDictionary = dict(zip(paramKeys, paramValues))
-                env.unpause()
+                # env.unpause()
                 break
 
             stepCounter += 1
             if stepCounter % agent.targetUpdateCount == 0:
                 agent.updateTargetModel()
-            env.unpause()
+            # env.unpause()
             # print("------------------------------------------")
         # Epsilon decay
         if agent.epsilon > agent.epsilonMin:
