@@ -54,7 +54,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
     def __init__(self):
 
-        rospy.init_node("sphero_dqlearn", anonymous=True, log_level=rospy.ERROR)
+        rospy.init_node("sphero_rl", anonymous=True, log_level=rospy.ERROR)
 
         rospy.logdebug("Start SpheroEnv INIT...")
 

@@ -12,16 +12,14 @@ import json
 import glob
 
 from task_envs.sphero import sphero_world
-from sphero_formation.msg import OdometryArray
-from nav_msgs.msg import Odometry
 
 if __name__ == '__main__':
 
-    rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.ERROR) #log_level=rospy.DEBUG
-    r = rospy.Rate(10)
+    # rospy.init_node('sphero_qlearn', anonymous=True, log_level=rospy.ERROR) #log_level=rospy.DEBUG
 
     # Init OpenAI_ROS ENV
     env = gym.make('SpheroWorld-v0')
+    env.pause()
     # Create the Gym environment
     rospy.loginfo("Gym environment done")
     rospy.loginfo("Starting Learning")
@@ -29,7 +27,7 @@ if __name__ == '__main__':
     # Set the logging system
     rospack = rospkg.RosPack()
     pkg_path = rospack.get_path('sphero_formation')
-    outdir = pkg_path + '/training_results'
+    outdir = pkg_path + '/training_results/qlearn'
     sr = StatsRecorder(outdir)
     rospy.loginfo("Monitor Wrapper started")
 
@@ -65,10 +63,6 @@ if __name__ == '__main__':
 
     start_time = time.time()
     highest_reward = 0
-    
-    temp_msg = Odometry()
-    while not(abs(temp_msg.twist.twist.linear.y) > 0.05 or abs(temp_msg.twist.twist.linear.x) > 0.05):
-        temp_msg = rospy.wait_for_message('/robot_0/odom', Odometry)
 
     try:
         # Starts the main training loop: the one about the episodes to do
@@ -82,7 +76,9 @@ if __name__ == '__main__':
 
             # Initialize the environment and get first state of the robot
             sr.before_reset()
+            env.unpause()
             observation = env.reset()
+            env.pause()
             sr.after_reset(observation)
             state = ''.join(map(str, observation))
 
@@ -96,7 +92,9 @@ if __name__ == '__main__':
                 rospy.logdebug("Next action is:%d", action)
                 # Execute the action in the environment and get feedback
                 sr.before_step(action)
+                env.unpause()
                 observation, reward, done, info = env.step(action)
+                env.pause()
                 sr.after_step(observation, reward, done, info)
 
                 rospy.logdebug(str(observation) + " " + str(reward))
@@ -124,7 +122,6 @@ if __name__ == '__main__':
                     break
                 rospy.logwarn("############### END Step=>" + str(i))
                 #raw_input("Next Step...PRESS KEY")
-                r.sleep()
             m, s = divmod(int(time.time() - start_time), 60)
             h, m = divmod(m, 60)
             rospy.logerr(("EP: " + str(x + 1) + " - [alpha: " + str(round(qlearn.alpha, 2)) + " - gamma: " + str(

@@ -45,4 +45,6 @@ window
 	center [ 0 -0.3 ]
 	rotate [ 0.000 0 ]
 	scale 42
+	show_data 1
+	show_clock 1
 )

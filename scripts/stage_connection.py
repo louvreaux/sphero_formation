@@ -3,13 +3,10 @@
 import rospy
 import random
 import copy
-import numpy as np
-
-from math import cos, sin
+import os
 
 from std_srvs.srv import Empty
-from std_msgs.msg import Float64, Int32
-from geometry_msgs.msg import Vector3
+from std_msgs.msg import Int32
 from geometry_msgs.msg import Pose2D, Twist
 
 class StageConnection():
@@ -39,19 +36,21 @@ class StageConnection():
 
     def pauseSim(self):
         rospy.logdebug("PAUSING...")
-        rospy.wait_for_service('/pause_sim')
-        try:
-           self.pause_simulation_proxy()
-        except rospy.ServiceException as e:
-           print ("/pause_sim service call failed")
+        os.system("xdotool key --window \"$(wmctrl -l | grep \"Stage (ROS)\" | cut -c 1-10)\" p ")
+        # rospy.wait_for_service('/pause_sim')
+        # try:
+        #    self.pause_simulation_proxy()
+        # except rospy.ServiceException as e:
+        #    print ("/pause_sim service call failed")
 
     def unpauseSim(self):
         rospy.logdebug("UNPAUSING...")
-        rospy.wait_for_service('/unpause_sim')
-        try:
-           self.unpause_simulation_proxy()
-        except rospy.ServiceException as e:
-           print ("/unpause_sim service call failed")
+        os.system("xdotool key --window \"$(wmctrl -l | grep \"Stage (ROS)\" | cut -c 1-10)\" p ")
+        # rospy.wait_for_service('/unpause_sim')
+        # try:
+        #    self.unpause_simulation_proxy()
+        # except rospy.ServiceException as e:
+        #    print ("/unpause_sim service call failed")
 
     def resetSim(self):
         rospy.logdebug("RESETING POSITIONS...")

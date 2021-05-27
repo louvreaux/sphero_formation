@@ -1,11 +1,10 @@
 import rospy
-import random
 import numpy as np
 
 from gym import spaces
 from gym.envs.registration import register
-from geometry_msgs.msg import Vector3, Twist
-from math import sqrt, cos, sin
+from geometry_msgs.msg import Twist
+from math import cos, sin
 from robot_envs import sphero_env
 
 timestep_limit_per_episode = 2500 # Can be any Value
@@ -27,28 +26,18 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
         # Observation limits
         self.vel_max = rospy.get_param('max_velocity')
-        self.pose_max = rospy.get_param('max_pose')
         self.rel_pose_max = rospy.get_param('max_relative_pose')
-        self.rel_obst_pose_max = rospy.get_param('max_relative_pose_to_obstacle')
 
         # Radiuses
-        self.too_close = rospy.get_param('too_close')               # agent shoudn't be inside of this radius (it means that it has crashed)
-        self.crowd_radius_q = rospy.get_param('crowd_radius_q')     # agent shouldn't be inside of this radius (too close to neighbours)
-        self.avoid_radius_q = rospy.get_param('avoid_radius_q')     # agent shouldn't be inside of this radius (too close to obstacles)
-        self.close_radius = rospy.get_param('close_radius')         # agent should be inside of this radius
-
-        self.end_episode_points = rospy.get_param('end_episode_points')
+        self.too_close = rospy.get_param('too_close')
 
 
         # Define action and observation space
         self.action_space = spaces.Discrete(int(360.0/self.angle_quant_step))
 
-        self.observation_space = spaces.Tuple((
-                    spaces.Box(low = -2*np.pi, high = 2*np.pi, shape = (1,1),  dtype = np.float64),                                     # smjer
-                    spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64),                  # najblizi susjed
-                    spaces.Box(low = -self.rel_pose_max, high = self.rel_pose_max, shape = (1,2), dtype = np.float64)))                 # pozicija grupiranja
-                    #spaces.Box(low = 0.0, high = 2*np.pi, shape = (1,1), dtype = np.float64)))                                         # smjer jata
-                    #spaces.Box(low = -self.rel_obst_pose_max, high = self.rel_obst_pose_max, shape = (10, 2), dtype = np.float64)))    # pozicije prepreka
+        self.observation_space = spaces.Box(low=np.array([-1*np.pi, 0.0, 0.0, 0.0, 0.0]), 
+                                            high=np.array([np.pi, 2*np.pi, self.rel_pose_max, 2*np.pi, self.rel_pose_max]), 
+                                            dtype=np.float64)
 
         # We set the reward range, which is not compulsory but here we do it.
         self.reward_range = (-np.inf, np.inf)
@@ -58,7 +47,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         rospy.logdebug("OBSERVATION SPACES TYPE===>"+str(self.observation_space))
 
         self.cumulated_steps = 0.0
-        self.last_obs = ()
+        self.crash = False
 
         # Here we will add any init functions prior to starting the MyRobotEnv
         super(SpheroWorldEnv, self).__init__()
@@ -109,9 +98,9 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         """
         rospy.logdebug("Start Get Observation ==>")
         # We get the laser scan data
-        agent_steer, closest_agent_pose, direction, steer, closest_obst, num_of_neighbours = self.get_callback()
+        steer_diff, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours = self.get_callback()
         
-        discretized_observations = self.discretize_observation(agent_steer, closest_agent_pose, direction, steer, num_of_neighbours)#, closest_obst)
+        discretized_observations = self.discretize_observation(steer_diff, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours)
 
         rospy.logdebug("Observations==>"+str(discretized_observations))
         rospy.logdebug("END Get Observation ==>")
@@ -123,7 +112,11 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
     def _is_done(self, observations):
         
         if self._episode_done:
-            rospy.logerr("Sphero has diverged from flock or has hit something!")
+            if self.crash:
+                rospy.logerr("Sphero went too close to his neighbour!")
+                self.crash = False
+            else:
+                rospy.logerr("Sphero diverged from the flock!")
 
         return self._episode_done
 
@@ -133,33 +126,21 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
         if not done:
 
-            # OVO JE DA NE BUDE BLIZU NAJBLIZEM AGENTU
-            dist_to_neighbour = sqrt(observations[1][0]**2 + observations[1][1]**2)
-            if dist_to_neighbour <= 0.3 and dist_to_neighbour > 0.1:
-                reward += 25 * dist_to_neighbour - 7.5
-            elif dist_to_neighbour <= 0.1:
-                reward -= 5
+            # Punish being too close to neighbour
+            reward += (5.0 / (1.0 + np.exp(-50.0 * (observations[1] - 0.2))) - 5.0)
+            # temp = reward
+            # rospy.logerr("CLOSEST NEIGHBOUR REWARD: " + str(reward))
 
-            # OVO JE DA NE BUDE BLIZU PREPRECI
-            # arr = observations[4]
-            # for i in range(0, len(arr)):
-            #     if sqrt(arr[i][0]**2 + arr[i][1]**2) <= self.avoid_radius_q:
-            #         reward -=  5.0
+            # Reward being close to flock
+            reward += (5.0 - 5.0 / (1.0 + np.exp(-20.0 * (observations[4] - 0.35))))
+            # rospy.logerr("FLOCK REWARD: " + str(reward - temp))
+            # temp = reward
 
-            # OVO JE DA BUDE BLIZU JATU
-            dist_to_flock = sqrt(observations[2][0]**2 + observations[2][1]**2)
-            #if dist_to_flock <= 0.8 and dist_to_flock > 0.6:
-            #    reward -= 5
-            if dist_to_flock <= 0.6 and dist_to_flock > 0.1:
-                reward += -10.0 * dist_to_flock + 6.0
-            elif dist_to_flock <= 0.1:
-                reward += 5
-
-            # OVO JE DA IMA ISTI SMJER
-            if observations[0] != 0.0:
-                reward -= 3.0
+            # Reward going the similar way as flock
+            reward += (5.0 - 5.0 / (1.0 + np.exp(-4.0 * (abs(observations[0] - np.pi/2.0)))))
+            # rospy.logerr("STEER REWARD: " + str(reward - temp))
         else:
-             reward += self.end_episode_points
+             reward -= 10
 
         rospy.logdebug("reward=" + str(reward))
         self.cumulated_reward += reward
@@ -172,7 +153,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
     # Internal TaskEnv Methods
     
-    def discretize_observation(self, agent_steer, closest_agent_pose, direction, steer, num_of_neighbours):#, closest_obst):
+    def discretize_observation(self, steer_diff, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours):
         """
 
         """
@@ -180,47 +161,29 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
         if  num_of_neighbours != 0:
 
             # KVANTIZIRAJ SMJER AGENTA
-            agent_steer = self.observation_quantization(agent_steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
-            agent_steer = agent_steer * np.pi / 180.0
-            if agent_steer >= 2 * np.pi:
-                agent_steer == 0.0
+            steer_diff = self.observation_quantization(steer_diff, -1*np.pi, np.pi, self.angle_quant_step * np.pi / 180.0)
+            if abs(steer_diff) <= 0.001:
+                steer_diff = 0.0
 
             # KVANTIZIRAJ POZICIJU NAJBLIZEG AGENTA I PREPREKA
-            closest_agent_pose[0] = self.observation_quantization(closest_agent_pose[0], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
-            closest_agent_pose[1] = self.observation_quantization(closest_agent_pose[1], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
+            closest_neighbour[0] = self.observation_quantization(closest_neighbour[0], 0.0, 2*np.pi, self.angle_quant_step * np.pi / 180.0)
+            closest_neighbour[1] = self.observation_quantization(closest_neighbour[1], 0.0, self.rel_pose_max, self.quant_step)
 
-            if closest_agent_pose[0] == 0.0:
-                closest_agent_pose[0] = 0.0
-            if closest_agent_pose[1] == 0.0:
-                closest_agent_pose[1] = 0.0
+            if abs(closest_neighbour[0]) <= 0.001:
+                closest_neighbour[0] = 0.0
 
-            if sqrt(closest_agent_pose[0]**2 + closest_agent_pose[1]**2) <= self.too_close:
+            if closest_neighbour[1] <= self.too_close:
+                self.crash = True
                 self._episode_done = True
 
-            # for i in range(0, len(closest_obst)):
-            #     closest_obst[i][0] = self.observation_quantization(closest_obst[i][0], -self.rel_obst_pose_max, self.rel_obst_pose_max, self.quant_step)
-            #     closest_obst[i][1] = self.observation_quantization(closest_obst[i][1], -self.rel_obst_pose_max, self.rel_obst_pose_max, self.quant_step)
-            #     if sqrt(closest_obst[i][0]**2 + closest_obst[i][1]**2) <= self.too_close:
-            #         self._episode_done = True
-
             # KVANTIZIRAJ SREDNJU POZICIJU SUSJEDA
-            direction[0] = self.observation_quantization(direction[0], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
-            direction[1] = self.observation_quantization(direction[1], -self.rel_pose_max, self.rel_pose_max, self.quant_step)
+            flock_pose[0] = self.observation_quantization(flock_pose[0], 0.0, 2*np.pi, self.angle_quant_step * np.pi / 180.0)
+            flock_pose[1] = self.observation_quantization(flock_pose[1], 0.0, self.rel_pose_max, self.quant_step)
 
-            if direction[0] == 0.0:
-                direction[0] = 0.0
-            if direction[1] == 0.0:
-                direction[1] = 0.0
+            if abs(flock_pose[0]) <= 0.001:
+                flock_pose[0] = 0.0
 
-            steer = self.observation_quantization(steer*180.0/np.pi, 0.0, 360.0, self.angle_quant_step)
-            steer = steer * np.pi / 180.0
-
-            if steer >= 2 * np.pi:
-                steer = 0.0
-
-            diff_ang = agent_steer - steer
-
-            discretized_obs = (diff_ang, closest_agent_pose, direction)
+            discretized_obs = np.array([steer_diff, closest_neighbour[0], closest_neighbour[1], flock_pose[0], flock_pose[1]])
         else:
             self._episode_done = True
             discretized_obs = self.last_obs

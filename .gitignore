@@ -4,3 +4,4 @@ plot_stats.py
 # Debuggin data folder
 data/
 training_results/
+.vscode/
