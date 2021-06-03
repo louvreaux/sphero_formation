@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
 Main file
+Original author - Samuel Matthew Koesnadi
+https://github.com/samuelmat19/DDPG-tf2
 """
 import logging
 import random
 
 import gym
+import json
 from tqdm import trange
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -26,7 +29,11 @@ if __name__ == "__main__":
     LEARN = True
     USE_NOISE = True
     WARM_UP = 100
-    SAVE_WEIGHTS = True
+    # If we're learning we want to save weights, otherwise ignore
+    if LEARN:
+        SAVE_WEIGHTS = True
+    else:
+        SAVE_WEIGHTS = True
     EPS_GREEDY = 0.997
 
     # Step 1. create the gym environment
@@ -102,12 +109,20 @@ if __name__ == "__main__":
             t.set_postfix(r=avg_reward)
             tensorboard(ep, acc_reward, actions_squared, Q_loss, A_loss)
 
+            paramKeys = ['reward']
+            paramValues = [np.float64(avg_reward)]
+            paramDictionary = dict(zip(paramKeys, paramValues))
+
             # save weights
             if ep % 5 == 0 and SAVE_WEIGHTS:
                 brain.save_weights(CHECKPOINTS_PATH)
+                paramPath = CHECKPOINTS_PATH + str(_) + '.json'
+                with open(paramPath, 'w') as outfile:
+                    json.dump(paramDictionary, outfile)
 
     env.close()
-    brain.save_weights(CHECKPOINTS_PATH)
+    if SAVE_WEIGHTS:
+        brain.save_weights(CHECKPOINTS_PATH)
 
     logging.info("Training done...")
 

@@ -1,5 +1,6 @@
 """
 The extra classes or function that will be used in the main ones
+Original author - Samuel Matthew Koesnadi
 """
 
 import datetime

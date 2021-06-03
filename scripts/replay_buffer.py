@@ -1,5 +1,6 @@
 """
 Buffer system for the RL
+Original author - Samuel Matthew Koesnadi
 """
 
 import numpy as np

@@ -1,5 +1,6 @@
 """
 The main model declaration
+Original author - Samuel Matthew Koesnadi
 """
 import logging
 import os

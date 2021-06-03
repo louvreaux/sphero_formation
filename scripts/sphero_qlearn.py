@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-
+"""
+Original author - TheConstruct
+https://bitbucket.org/theconstructcore/openai_examples_projects/src/master/
+"""
 import gym
 import numpy
 import time

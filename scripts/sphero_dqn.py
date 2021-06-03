@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""Original author - 2019 Behcet Senturk
+https://github.com/bhctsntrk/mantis_ddqn_navigation
+"""
 from numba import jit, cuda
 from task_envs.sphero import sphero_world1
 
@@ -43,7 +46,7 @@ class Agent:
         self.learnStart = 1000 # Start to train model from this step(100000)
         self.memory = deque(maxlen=200000)  # Main memory to keep batches
         self.timeOutLim = 1500  # Maximum step size for each episode(1400)
-        self.savePath = '/home/lovro/sphero_ws/src/sphero_formation/training_results/'  # Model save path
+        self.savePath = '/home/lovro/sphero_ws/src/sphero_formation/training_results/DQN/'  # Model save path
 
         self.onlineModel = self.initNetwork()
         self.targetModel = self.initNetwork()

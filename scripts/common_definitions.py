@@ -1,12 +1,13 @@
 """
 Common definitions of variables that can be used across files
+Original author - Samuel Matthew Koesnadi
 """
 
 from tensorflow.keras.initializers import glorot_normal
 
 # general parameters
-CHECKPOINTS_PATH = "/home/lovro/sphero_ws/src/sphero_formation/training_results/checkpoints/DDPG_"
-TF_LOG_DIR = '/home/lovro/sphero_ws/src/sphero_formation/training_results/logs/DDPG/'
+CHECKPOINTS_PATH = "/home/lovro/sphero_ws/src/sphero_formation/training_results/DDPG/checkpoints/DDPG_"
+TF_LOG_DIR = '/home/lovro/sphero_ws/src/sphero_formation/training_results/DDPG/logs/'
 
 # brain parameters
 GAMMA = 0.99  # for the temporal difference
