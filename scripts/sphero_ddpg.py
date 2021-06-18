@@ -28,19 +28,20 @@ if __name__ == "__main__":
     RENDER_ENV = False
     LEARN = True
     USE_NOISE = True
-    WARM_UP = 100
+    WARM_UP = 300
     # If we're learning we want to save weights, otherwise ignore
     if LEARN:
         SAVE_WEIGHTS = True
     else:
-        SAVE_WEIGHTS = True
-    EPS_GREEDY = 0.997
+        SAVE_WEIGHTS = False
+    EPS_GREEDY = 0.95
 
     # Step 1. create the gym environment
     env = gym.make(RL_TASK)
     env.pause()
-    action_space_high = env.action_space.high[0]
-    action_space_low = env.action_space.low[0]
+ 
+    action_space_high = env.action_space.high#[0]
+    action_space_low = env.action_space.low#[0]
 
     brain = Brain(env.observation_space.shape[0], env.action_space.shape[0], action_space_high,
                   action_space_low)
@@ -66,6 +67,7 @@ if __name__ == "__main__":
         for ep in t:
             env.unpause()
             prev_state = env.reset()
+            # print("STATE: " + str(prev_state))
             env.pause()
             acc_reward.reset_states()
             actions_squared.reset_states()
@@ -82,7 +84,10 @@ if __name__ == "__main__":
                                     (random.random() < EPS_GREEDY+(1-EPS_GREEDY)*ep/TOTAL_EPISODES),
                                     noise=USE_NOISE)
                 env.unpause()
+                # print("ACTION: " + str(cur_act))
                 state, reward, done, _ = env.step(cur_act)
+                # print("STATE: " + str(state))
+                # print("----------------------------------")
                 env.pause()
                 brain.remember(prev_state, reward, state, int(done))
 

@@ -4,8 +4,8 @@ import numpy as np
 
 from gym import spaces
 from gym.envs.registration import register
-from geometry_msgs.msg import Vector3, Twist
-from math import sqrt, cos, sin
+from geometry_msgs.msg import Twist
+from math import cos, sin
 from robot_envs import sphero_env
 
 #timestep_limit_per_episode = 2500 # Can be any Value
@@ -41,10 +41,11 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
 
 		# Define action and observation space
-		self.action_space = spaces.Box(low=np.array([-1*np.pi]), high=np.array([np.pi]), dtype=np.float64)
+		# self.action_space = spaces.Box(low=np.array([-1*np.pi]), high=np.array([np.pi]), dtype=np.float64)
+		self.action_space = spaces.Box(low=np.array([-1*np.pi, 0.0]), high=np.array([np.pi, 0.3]), dtype=np.float64)
 
-		self.observation_space = spaces.Box(low=np.array([-1*np.pi, 0.0, 0.0, 0.0, 0.0]), 
-											high=np.array([np.pi, 2*np.pi, self.rel_pose_max, 2*np.pi, self.rel_pose_max]), 
+		self.observation_space = spaces.Box(low=np.array([-1*np.pi, 0.0, 0.0, 0.0, 0.0, -0.3]), 
+											high=np.array([np.pi, 2*np.pi, self.rel_pose_max, 2*np.pi, self.rel_pose_max, 0.3]), 
 											dtype=np.float64)
 
 		# We set the reward range, which is not compulsory but here we do it.
@@ -94,8 +95,13 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		rospy.logdebug("Start Set Action ==>"+str(action))
 
 		# We convert the actions to speed movements
-		# theta = action * self.angle_quant_step * (np.pi/180.0)
-		new_vel = np.array([cos(action), sin(action)]) * self.vel_max # We rotate vector [1, 0] to the left
+
+		# ONLY ONE ACTION PARAMETER -> diff_angle
+		# new_vel = np.array([cos(action), sin(action)]) * self.vel_max # We rotate vector [1, 0] to the left
+
+		# TWO ACTION PARAMETERS -> [diff_angle, speed]
+		new_vel = np.array([cos(action[0]), sin(action[0])]) * action[1]
+		
 		# rospy.logerr("ACTION: " + str(action))
 		# rospy.logerr("ACTION ANGLE: " + str(theta * 180.0 / np.pi))
 		
@@ -114,7 +120,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		"""
 		rospy.logdebug("Start Get Observation ==>")
 
-		steer_diff, closest_neighbour, flock_pose, flock_steer, closest_obst, num_of_neighbours = self.get_callback()
+		steer_diff, closest_neighbour, flock_pose, flock_steer, vel_diff, closest_obst, num_of_neighbours = self.get_callback()
 
 		# If our agent didn't loose the flock, examine observations
 		if num_of_neighbours > 0:
@@ -131,7 +137,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 				self.crash = True
 				self._episode_done = True
 
-			observations = np.array([steer_diff, closest_neighbour[0], closest_neighbour[1], flock_pose[0], flock_pose[1]])
+			observations = np.array([steer_diff, closest_neighbour[0], closest_neighbour[1], flock_pose[0], flock_pose[1], vel_diff])
 			self.last_obs = observations
 
 		# Else, return last known observation
@@ -192,8 +198,10 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 
 			# Reward going the similar way as flock
 			# reward += 5.0 - 5.0 / np.pi * abs(observations[0])
-			reward += (5.0 - 5.0 / (1.0 + np.exp(-4.0 * (abs(observations[0] - np.pi/2.0)))))
+			reward += (3.0 - 3.0 / (1.0 + np.exp(-4.0 * (abs(observations[0] - np.pi/2.0)))))
 			# rospy.logerr("STEER REWARD: " + str(reward - temp))
+
+			reward += (2.0 - 2.0 / (1.0 + np.exp(-50.0 * (abs(observations[5]) - 0.125))))
 		else:
 			 reward -= 10.0
 

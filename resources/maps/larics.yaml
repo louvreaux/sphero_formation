@@ -1,0 +1,6 @@
+image: larics.bmp
+resolution: 0.004
+origin: [0.0, 0.0, 0.0]
+occupied_thresh: 0.8
+free_thresh: 0.2
+negate: 0
