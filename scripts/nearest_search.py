@@ -76,6 +76,7 @@ class NearestSearch(object):
             # Get current time and observed agent's name
             time = rospy.Time.now()
             key = agent.header.frame_id.split('/')[1]
+            key = key.replace("robot", "sphero")
 
             # Get agent's position and initialize relative positions message.
             agent_position = agent.pose.pose.position
@@ -143,7 +144,7 @@ class NearestSearch(object):
         # Get parameters and initialize class variables.
         self.num_agents = rospy.get_param('/num_of_robots')
         robot_name = rospy.get_param('~robot_name')
-        using_sim_kalman = False
+        using_sim_kalman = True
         if rospy.get_param('/run_type') == 'sim':
             using_sim_kalman = rospy.get_param('/use_kalman')
             if not using_sim_kalman and rospy.get_param('/ctrl_loop_freq') != rospy.get_param('/data_stream_freq'):
@@ -171,7 +172,7 @@ class NearestSearch(object):
         self.param_callback(None)
 
         if using_sim_kalman:
-            topic_name = '/' + robot_name + '_{}/odom_est'
+            topic_name = '/robot_{}/odom_est'
         else:
             topic_name = '/' + robot_name + '_{}/odom'
 

@@ -38,7 +38,6 @@ if __name__ == "__main__":
 
     # Step 1. create the gym environment
     env = gym.make(RL_TASK)
-    env.pause()
  
     action_space_high = env.action_space.high#[0]
     action_space_low = env.action_space.low#[0]
@@ -83,12 +82,10 @@ if __name__ == "__main__":
                 cur_act = brain.act(tf.expand_dims(prev_state, 0), _notrandom=(ep >= WARM_UP) and
                                     (random.random() < EPS_GREEDY+(1-EPS_GREEDY)*ep/TOTAL_EPISODES),
                                     noise=USE_NOISE)
-                env.unpause()
                 # print("ACTION: " + str(cur_act))
                 state, reward, done, _ = env.step(cur_act)
                 # print("STATE: " + str(state))
                 # print("----------------------------------")
-                env.pause()
                 brain.remember(prev_state, reward, state, int(done))
 
                 # update weights

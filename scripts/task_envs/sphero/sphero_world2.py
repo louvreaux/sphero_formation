@@ -177,7 +177,7 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			# 	reward += 25 * observations[2] - 7.5
 			# elif observations[2] <= 0.1:
 			# 	reward -= 5
-			reward += (5.0 / (1.0 + np.exp(-50.0 * (observations[1] - 0.2))) - 5.0)
+			reward += (5.0 / (1.0 + np.exp(-50.0 * (observations[2] - 0.2))) - 5.0)
 			# temp = reward
 			# rospy.logerr("CLOSEST NEIGHBOUR REWARD: " + str(reward))
 
