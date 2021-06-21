@@ -19,7 +19,8 @@ import numpy as np
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 from geometry_msgs.msg import Pose, Vector3, Quaternion
-#from tf.transformations import quaternion_from_euler
+#import _tf2
+#from tf2.transformations import quaternion_from_euler
 
 
 class Vector2(object):
@@ -145,6 +146,11 @@ class Vector2(object):
         """Limit vector's maximum magnitude to given value."""
         if self.norm() > value:
             self.set_mag(value)
+    
+    def limit_low(self, value):
+        """Limit vector's maximum magnitude to given value."""
+        if self.norm() < value:
+            self.set_mag(value)
 
     def limit_lower(self, value):
         """Limit vector's minimum magnitude to given value."""
@@ -216,7 +222,7 @@ class MarkerSet(object):
         self.markers['velocity'].color = ColorRGBA(1, 1, 1, 1)      # white
         self.markers['estimated'].color = ColorRGBA(1, 0.55, 0, 1)  # orange
 
-    def euler_to_quaternion(self, yaw, pitch, roll):
+    def euler_to_quaternion(self, roll, pitch, yaw):
 
         qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)

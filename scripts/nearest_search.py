@@ -76,7 +76,6 @@ class NearestSearch(object):
             # Get current time and observed agent's name
             time = rospy.Time.now()
             key = agent.header.frame_id.split('/')[1]
-            key = key.replace("robot", "sphero")
 
             # Get agent's position and initialize relative positions message.
             agent_position = agent.pose.pose.position
@@ -172,7 +171,7 @@ class NearestSearch(object):
         self.param_callback(None)
 
         if using_sim_kalman:
-            topic_name = '/robot_{}/odom_est'
+            topic_name = '/' + robot_name + '_{}/odom_est'
         else:
             topic_name = '/' + robot_name + '_{}/odom'
 

@@ -68,10 +68,10 @@ class Agent:
         '''
         model = Sequential()
 
-        model.add(Dense(64, input_shape=(self.stateSize,), activation="relu", kernel_initializer=HeUniform()))
-        model.add(Dense(64, activation="relu", kernel_initializer=HeUniform()))
+        model.add(Dense(64, input_shape=(self.stateSize,), activation="relu", kernel_initializer="lecun_uniform"))
+        model.add(Dense(64, activation="relu", kernel_initializer="lecun_uniform"))
         model.add(Dropout(0.3))
-        model.add(Dense(self.actionSize, activation="linear", kernel_initializer=HeUniform()))
+        model.add(Dense(self.actionSize, activation="linear", kernel_initializer="lecun_uniform"))
         model.compile(loss="huber", optimizer=RMSprop(learning_rate=self.learningRate, rho=0.9, epsilon=1e-06))
         model.summary()
 
@@ -196,9 +196,6 @@ if __name__ == '__main__':
             nextState, reward, done, info = env.step(action)
             #rospy.logerr("NEXT STATE: " + str(nextState))
             env.pause()
-            if score+reward > 10000 or score+reward < -10000:
-                print("Error Score is too high or too low! Resetting...")
-                break
 
             agent.appendMemory(state, action, reward, nextState, done)
 
