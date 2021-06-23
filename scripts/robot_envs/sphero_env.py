@@ -58,7 +58,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
 
         rospy.logdebug("Start SpheroEnv INIT...")
 
-        self.robot_name_space = "robot_2"
+        self.robot_name_space = "sphero_2"
         self.isCallback = False
 
         # We launch the init function of the Parent Class robot_stage_env.RobotStageEnv
@@ -66,16 +66,16 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         # self.stage.unpauseSim()
 
         # Subscribers
-        subs = [mf.Subscriber("robot_2/nearest", OdometryArray), mf.Subscriber("robot_2/avoid", PoseArray)]
+        subs = [mf.Subscriber("sphero_2/nearest", OdometryArray), mf.Subscriber("sphero_2/avoid", PoseArray)]
         self.ts = mf.TimeSynchronizer(subs, 10)
         self.ts.registerCallback(self._callback)
 
         # Publishers
-        self._cmd_vel_pub = rospy.Publisher('robot_2/cmd_vel', Twist, queue_size=1)
+        self._cmd_vel_pub = rospy.Publisher('sphero_2/cmd_vel', Twist, queue_size=1)
 
         temp_msg = Odometry()
         while not(abs(temp_msg.twist.twist.linear.y) > 0.05 or abs(temp_msg.twist.twist.linear.x) > 0.05):
-            temp_msg = rospy.wait_for_message('/robot_0/odom_est', Odometry)
+            temp_msg = rospy.wait_for_message('/sphero_0/odom', Odometry)
 
         # self.stage.pauseSim()
         

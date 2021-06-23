@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from os import name
 import rospy
 import pandas as pd
 import message_filters as mf
@@ -52,8 +53,8 @@ class ReynoldsController(object):
             # This is for use with real robots (Spheros).
             if self.run_type == 'real':
                 cmd_vel = Twist()
-                cmd_vel.linear.x = int(ret_vel.linear.x * 100)
-                cmd_vel.linear.y = int(ret_vel.linear.y * 100)
+                cmd_vel.linear.x = int(ret_vel.linear.x * 50)
+                cmd_vel.linear.y = int(ret_vel.linear.y * 50)
                 self.cmd_vel_pub.publish(cmd_vel)
             # This is for use with simulation.
             elif self.run_type == 'sim':
@@ -82,11 +83,13 @@ class ReynoldsController(object):
         # Initialize class variables.
         init_vel_x = rospy.get_param("~init_vel_x", 0)
         init_vel_y = rospy.get_param("~init_vel_y", 0)
+        namespace = rospy.get_param("~ns", None)
+        print("NAMESPACE: " + str(namespace))
         frequency = rospy.get_param("/ctrl_loop_freq")
         wait_count = int(rospy.get_param("/wait_time") * frequency)
         start_count = int(rospy.get_param("/start_time") * frequency)
         self.run_type = rospy.get_param("/run_type")
-        self.agent = Boid(init_vel_x, init_vel_y, wait_count, start_count, frequency)
+        self.agent = Boid(init_vel_x, init_vel_y, wait_count, start_count, frequency, namespace)
         self.markers = MarkerSet()
         self.params_set = False
         self.reset = False

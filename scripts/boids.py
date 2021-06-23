@@ -4,6 +4,7 @@
 
 import math
 import rospy
+import time
 import numpy as np
 
 from geometry_msgs.msg import Twist
@@ -78,7 +79,7 @@ class Boid(object):
             Compute total velocity based on all components
     """
 
-    def __init__(self, initial_velocity_x, initial_velocity_y, wait_count, start_count, frequency):
+    def __init__(self, initial_velocity_x, initial_velocity_y, wait_count, start_count, frequency, ns):
         """Create an empty boid and update parameters."""
         self.position = Vector2()
         self.velocity = Vector2()
@@ -91,6 +92,8 @@ class Boid(object):
         self.initial_velocity = Twist()
         self.initial_velocity.linear.x = initial_velocity_x
         self.initial_velocity.linear.y = initial_velocity_y
+        self.namespace = ns
+        self.start_time = time.time()
 
         # UNCOMMENT IF USING FILTER
         # # Initialize moving average filters.
@@ -133,6 +136,16 @@ class Boid(object):
         rospy.logdebug('crowd_radius:  %s', self.crowd_radius)
         rospy.logdebug('search_radius:  %s', self.search_radius)
         rospy.logdebug('avoid_radius:  %s', self.avoid_radius)
+
+    def juraj_circle(self):
+        w = 0.2
+        t = time.time() - self.start_time
+        steer = Vector2()
+        steer.x = round(math.sin(float(w) * float(t)), 2) ;
+        steer.y = round(math.cos(float(w) * float(t)), 2) ;
+        steer.limit(self.max_force)
+
+        return steer
 
     def compute_alignment(self, nearest_agents):
         """Return alignment component."""
@@ -261,12 +274,16 @@ class Boid(object):
 
         # Normal operation, velocity is determined using Reynolds' rules.
         else:
+
             self.velocity = get_agent_velocity(my_agent)
             self.old_heading = self.velocity.arg()
             self.old_velocity = Vector2(self.velocity.x, self.velocity.y)
             rospy.logdebug("old_velocity: %s", self.velocity)
 
             # Compute all the components.
+            #if self.namespace=="sphero_0":
+            #alignment = self.juraj_circle()
+            #else:
             alignment = self.compute_alignment(nearest_agents)
             cohesion = self.compute_cohesion(nearest_agents)
             separation = self.compute_separation(nearest_agents)
@@ -300,7 +317,7 @@ class Boid(object):
             
             # OVO JE NOVO DODANO
             self.velocity.limit(self.max_speed)
-            #self.velocity = Vector2(x = -1 * self.max_speed, y = 0.0)
+            #self.velocity = Vector2(x = 0.0, y = self.max_speed)
             #self.velocity.normalize()
             #self.velocity = self.velocity * self.max_speed
 
@@ -332,7 +349,7 @@ class Boid(object):
 
             # Pack all components for Rviz visualization.
             # Make sure these keys are the same as the ones in `util.py`.
-            self.viz_components['alignment'] = alignment * self.alignment_factor
+            self.viz_components['alignment'] = alignment * 1.4 #* self.alignment_factor
             self.viz_components['cohesion'] = cohesion * self.cohesion_factor
             self.viz_components['separation'] = separation * self.separation_factor
             self.viz_components['avoid'] = avoid * self.avoid_factor

@@ -62,12 +62,14 @@ if __name__ == "__main__":
     # To store average reward history of last few episodes
     avg_reward_list = []
     sp = SavePose()
+    env._init_env_variables()
+    env._update_episode()
 
     # run iteration
     with trange(TOTAL_EPISODES) as t:
         for ep in t:
             #env.unpause()
-            prev_state = env.reset()
+            prev_state = env._get_obs()#env.reset()# env._get_obs()
             # print("STATE: " + str(prev_state))
             #env.pause()
             acc_reward.reset_states()
@@ -104,8 +106,8 @@ if __name__ == "__main__":
                 poses_array = sp.get_list()
                 np.savetxt("/home/lovro/sphero_ws/src/sphero_formation/training_results/DDPG/poses_array.csv", poses_array, delimiter=",")
 
-                if done:
-                    break
+                #if done:
+                #   break
 
             ep_reward_list.append(acc_reward.result().numpy())
             # Mean of last 40 episodes

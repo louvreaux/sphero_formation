@@ -10,8 +10,8 @@
 	<!-- Start Reynolds controller nodes launcher. -->
 	<node pkg="sphero_formation" type="reynolds_launch.sh" name="reynolds_launcher" args="$(arg filename) sphero" output="screen"/>
 
-    <!-- <rosparam command="load" file="$(find sphero_formation)/cfg/qlearn_params.yaml" />
-    <node pkg="sphero_formation" name="sphero_world" type="sphero_ddpg.py" output="screen"/> -->
+    <rosparam command="load" file="$(find sphero_formation)/cfg/qlearn_params.yaml" />
+    <node pkg="sphero_formation" name="sphero_world" type="sphero_ddpg.py" output="screen"/>
 	<!-- Uncomment for recording rosbags. -->
 	<!-- <arg name="rosbag_args" default='-O $(find sphero_formation)/data/real_flock.bag -e "(.*)/odom" '/> 
 	<node pkg="rosbag" type="record" name="rosbag_record" args="$(arg rosbag_args)" output="screen"/> -->

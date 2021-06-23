@@ -25,7 +25,7 @@ head -$number_of_nodes $filename |
 while read line; do
 	params=($line)
 	namespace=$robot_name$i
-	ROS_NAMESPACE="$namespace" rosrun sphero_formation reynolds_controller.py _init_vel_x:=${params[1]} _init_vel_y:=${params[2]} &
+	ROS_NAMESPACE="$namespace" rosrun sphero_formation reynolds_controller.py _init_vel_x:=${params[1]} _init_vel_y:=${params[2]} _ns:="$namespace" &
 	((i++))
 done
 

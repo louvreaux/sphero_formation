@@ -107,8 +107,8 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		
 		# Publish velocity
 		send_velocity = Twist()
-		send_velocity.linear.x = new_vel[0]
-		send_velocity.linear.y = new_vel[1]
+		send_velocity.linear.x = new_vel[0] * 50
+		send_velocity.linear.y = new_vel[1] * 50
 		self.move_base(send_velocity)
 		
 		rospy.logdebug("END Set Action ==>"+str(action))
@@ -133,16 +133,16 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 			# 	steer_diff = 0.0
 
 			# If agent is too close to neighbour, finish episode
-			if closest_neighbour[1] <= self.too_close:
-				self.crash = True
-				self._episode_done = True
+			# if closest_neighbour[1] <= self.too_close:
+			#	self.crash = True
+			#	self._episode_done = True
 
 			observations = np.array([steer_diff, closest_neighbour[0], closest_neighbour[1], flock_pose[0], flock_pose[1], vel_diff])
 			self.last_obs = observations
 
 		# Else, return last known observation
 		else:
-			self._episode_done = True
+			# self._episode_done = True
 			observations = self.last_obs
 		
 		rospy.logdebug("Observations==>"+str(observations))

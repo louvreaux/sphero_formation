@@ -12,9 +12,8 @@ class SavePose():
 
         self.map_msg = rospy.wait_for_message("map", OccupancyGrid).data
         np.savetxt("/home/lovro/sphero_ws/src/sphero_formation/training_results/DDPG/map.csv", self.map_msg, delimiter=",")
-        subs = [mf.Subscriber("robot_0/odom", Odometry), mf.Subscriber("robot_1/odom", Odometry), 
-                mf.Subscriber("robot_2/odom", Odometry), mf.Subscriber("robot_3/odom", Odometry),
-                mf.Subscriber("robot_4/odom", Odometry), mf.Subscriber("robot_5/odom", Odometry)]
+        subs = [mf.Subscriber("robot_0/odom_est", Odometry), mf.Subscriber("robot_1/odom_est", Odometry), 
+                mf.Subscriber("robot_2/odom_est", Odometry)]
         
         self.ts = mf.TimeSynchronizer(subs, 10)
         self.ts.registerCallback(self.cb_update)
