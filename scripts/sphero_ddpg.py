@@ -18,6 +18,7 @@ from common_definitions import CHECKPOINTS_PATH, TOTAL_EPISODES, TF_LOG_DIR, UNB
 from actor_critic import Brain
 from utils import Tensorboard
 from task_envs.sphero import sphero_world2
+from save_poses import SavePose
 
 
 if __name__ == "__main__":
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     RL_TASK = 'SpheroWorld-v2'
     RENDER_ENV = False
-    LEARN = True
+    LEARN = False
     USE_NOISE = True
     WARM_UP = 300
     # If we're learning we want to save weights, otherwise ignore
@@ -60,21 +61,22 @@ if __name__ == "__main__":
     ep_reward_list = []
     # To store average reward history of last few episodes
     avg_reward_list = []
+    sp = SavePose()
 
     # run iteration
     with trange(TOTAL_EPISODES) as t:
         for ep in t:
-            env.unpause()
+            #env.unpause()
             prev_state = env.reset()
             # print("STATE: " + str(prev_state))
-            env.pause()
+            #env.pause()
             acc_reward.reset_states()
             actions_squared.reset_states()
             Q_loss.reset_states()
             A_loss.reset_states()
             brain.noise.reset()
 
-            for _ in range(2500):
+            for _ in range(1000000):
                 if RENDER_ENV:  # render the environment into GUI
                     env.render()
 
@@ -98,6 +100,9 @@ if __name__ == "__main__":
                 acc_reward(reward)
                 actions_squared(np.square(cur_act/action_space_high))
                 prev_state = state
+
+                poses_array = sp.get_list()
+                np.savetxt("/home/lovro/sphero_ws/src/sphero_formation/training_results/DDPG/poses_array.csv", poses_array, delimiter=",")
 
                 if done:
                     break
