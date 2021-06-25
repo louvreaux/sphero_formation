@@ -173,35 +173,23 @@ class SpheroWorldEnv(sphero_env.SpheroEnv):
 		if not done:
 
 			# Punish being too close to neighbour
-			# if observations[2] <= 0.3 and observations[2] > 0.1:
-			# 	reward += 25 * observations[2] - 7.5
-			# elif observations[2] <= 0.1:
-			# 	reward -= 5
-			reward += (5.0 / (1.0 + np.exp(-50.0 * (observations[1] - 0.2))) - 5.0)
+			reward += (5.0 / (1.0 + np.exp(-50.0 * (observations[2] - 0.2))) - 5.0)
 			# temp = reward
 			# rospy.logerr("CLOSEST NEIGHBOUR REWARD: " + str(reward))
 
-			# Punish being close to an obstacle
-			# arr = observations[4]
-			# for i in range(0, len(arr)):
-			#     if sqrt(arr[i][0]**2 + arr[i][1]**2) <= self.avoid_radius_q:
-			#         reward -=  5.0
-
 			# Reward being close to flock
-			# if observations[4] <= 0.6 and observations[4] > 0.1:
-			# 	reward += -10.0 * observations[4] + 6.0
-			# elif observations[4] <= 0.1:
-			# 	reward += 5
 			reward += (5.0 - 5.0 / (1.0 + np.exp(-20.0 * (observations[4] - 0.35))))
 			# rospy.logerr("FLOCK REWARD: " + str(reward - temp))
 			# temp = reward
 
 			# Reward going the similar way as flock
-			# reward += 5.0 - 5.0 / np.pi * abs(observations[0])
-			reward += (3.0 - 3.0 / (1.0 + np.exp(-4.0 * (abs(observations[0] - np.pi/2.0)))))
+			reward += (3.0 - 3.0 / (1.0 + np.exp(-4.0 * (abs(observations[0]) - np.pi/2.0))))
 			# rospy.logerr("STEER REWARD: " + str(reward - temp))
-
+			# temp = reward
+			
+			# Reward having the same velocity as the flock
 			reward += (2.0 - 2.0 / (1.0 + np.exp(-50.0 * (abs(observations[5]) - 0.125))))
+			# rospy.logerr("VELOCITY REWARD: " + str(reward - temp))
 		else:
 			 reward -= 10.0
 

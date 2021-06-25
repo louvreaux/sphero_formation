@@ -181,8 +181,9 @@ class Brain:
                                                    self.num_actions)) +
                                 (self.noise() if noise else 0))
         self.cur_action = np.clip(self.cur_action, self.action_low, self.action_high)
+        maxQ = max(self.critic_network([state, self.actor_network(state)])).numpy()[0]
 
-        return self.cur_action
+        return self.cur_action, maxQ
 
     def remember(self, prev_state, reward, state, done):
         """

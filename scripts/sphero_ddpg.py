@@ -9,6 +9,7 @@ import random
 
 import gym
 import json
+import time
 from tqdm import trange
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -28,12 +29,13 @@ if __name__ == "__main__":
     RENDER_ENV = False
     LEARN = True
     USE_NOISE = True
-    WARM_UP = 300
     # If we're learning we want to save weights, otherwise ignore
     if LEARN:
         SAVE_WEIGHTS = True
+        WARM_UP = 0
     else:
         SAVE_WEIGHTS = False
+        WARM_UP = 300
     EPS_GREEDY = 0.95
 
     # Step 1. create the gym environment
@@ -61,6 +63,7 @@ if __name__ == "__main__":
     ep_reward_list = []
     # To store average reward history of last few episodes
     avg_reward_list = []
+    startTime = time.time()
 
     # run iteration
     with trange(TOTAL_EPISODES) as t:
@@ -74,18 +77,24 @@ if __name__ == "__main__":
             Q_loss.reset_states()
             A_loss.reset_states()
             brain.noise.reset()
+            total_max_q = 0
+            step = 0
+            sum_reward = 0
 
             for _ in range(2500):
+                step += 1
                 if RENDER_ENV:  # render the environment into GUI
                     env.render()
 
                 # Recieve state and reward from environment.
-                cur_act = brain.act(tf.expand_dims(prev_state, 0), _notrandom=(ep >= WARM_UP) and
+                cur_act, maxQ = brain.act(tf.expand_dims(prev_state, 0), _notrandom=(ep >= WARM_UP) and
                                     (random.random() < EPS_GREEDY+(1-EPS_GREEDY)*ep/TOTAL_EPISODES),
                                     noise=USE_NOISE)
                 env.unpause()
                 # print("ACTION: " + str(cur_act))
                 state, reward, done, _ = env.step(cur_act)
+                total_max_q += maxQ
+                sum_reward += reward 
                 # print("STATE: " + str(state))
                 # print("----------------------------------")
                 env.pause()
@@ -114,8 +123,11 @@ if __name__ == "__main__":
             t.set_postfix(r=avg_reward)
             tensorboard(ep, acc_reward, actions_squared, Q_loss, A_loss)
 
-            paramKeys = ['reward']
-            paramValues = [np.float64(avg_reward)]
+            m, s = divmod(int(time.time() - startTime), 60)
+            h, m = divmod(m, 60)
+
+            paramKeys = ['score', 'step', 'time', 'averageQ']
+            paramValues = [sum_reward, step, h, total_max_q / step]
             paramDictionary = dict(zip(paramKeys, paramValues))
 
             # save weights
