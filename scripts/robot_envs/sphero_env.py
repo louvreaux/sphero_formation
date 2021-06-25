@@ -148,6 +148,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             temp_dist = get_distance(temp_var_flock)
             temp_angle = get_angle(temp_var_flock, temp_dist)
             self.flock_steer = temp_angle
+            self.flock_velocity = temp_dist
             
             # Get our agent direction angle
             temp_var_agent = get_agent_velocity(my_agent)
@@ -155,6 +156,7 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
             temp_dist = get_distance(temp_var_agent)
             temp_angle = get_angle(temp_var_agent, temp_dist)
             self.agent_steer = temp_angle
+            self.agent_velocity = temp_dist
 
             # Get steer angle difference
             self.steer_diff = np.arctan2(temp_var_flock[1], temp_var_flock[0]) - np.arctan2(temp_var_agent[1], temp_var_agent[0])
@@ -162,6 +164,8 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
                 self.steer_diff -= 2 * np.pi
             elif self.steer_diff <= -np.pi:
                 self.steer_diff += 2 * np.pi
+
+            self.vel_diff = self.agent_velocity - self.flock_velocity
 
         self.isCallback = True
 
@@ -211,4 +215,4 @@ class SpheroEnv(robot_stage_env.RobotStageEnv):
         while not self.isCallback:
             pass
         self.isCallback = False
-        return self.steer_diff, self.closest_neighbour, self.flock_pose, self.flock_steer, self.closest_obstacles, self.num_of_nearest_agents
+        return self.steer_diff, self.closest_neighbour, self.flock_pose, self.flock_steer, self.vel_diff, self.closest_obstacles, self.num_of_nearest_agents

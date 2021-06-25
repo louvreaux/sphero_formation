@@ -16,7 +16,7 @@ max_velocity: 0.25
 max_pose: 10.0
 max_relative_pose: 1.0 # can be equal to search radius
 max_relative_pose_to_obstacle: 1.0 # can be equal to avoid radius
-too_close: 0.1 
+too_close: 0.11 #0.1
 crowd_radius_q: 0.3
 avoid_radius_q: 0.2
 close_radius: 0.5 # can be same as search radius

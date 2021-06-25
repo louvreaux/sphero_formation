@@ -299,10 +299,10 @@ class Boid(object):
             self.velocity += acceleration / self.frequency
             
             # OVO JE NOVO DODANO
-            #self.velocity.limit(self.max_speed)
+            self.velocity.limit(self.max_speed)
             #self.velocity = Vector2(x = -1 * self.max_speed, y = 0.0)
-            self.velocity.normalize()
-            self.velocity = self.velocity * self.max_speed
+            #self.velocity.normalize()
+            #self.velocity = self.velocity * self.max_speed
 
             rospy.logdebug("force:        %s", force)
             rospy.logdebug("acceleration: %s", acceleration / self.frequency)
