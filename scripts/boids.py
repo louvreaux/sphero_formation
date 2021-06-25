@@ -4,8 +4,11 @@
 
 import math
 import rospy
+import numpy as np
+
 from geometry_msgs.msg import Twist
 from util import Vector2, angle_diff, MAFilter
+from random import randint
 
 
 def get_agent_velocity(agent):
@@ -239,7 +242,7 @@ class Boid(object):
         # Force is not limited so this rule has highest priority.
         return main_direction + safety_direction
 
-    def compute_velocity(self, my_agent, nearest_agents, avoids):
+    def compute_velocity(self, my_agent, nearest_agents, avoids, reset=False, action=-1):
         """Compute total velocity based on all components."""
 
         # While waiting to start, send zero velocity and decrease counter.
@@ -296,9 +299,10 @@ class Boid(object):
             self.velocity += acceleration / self.frequency
             
             # OVO JE NOVO DODANO
-            #self.velocity.limit(self.max_speed)
-            self.velocity.normalize()
-            self.velocity = self.velocity * self.max_speed
+            self.velocity.limit(self.max_speed)
+            #self.velocity = Vector2(x = -1 * self.max_speed, y = 0.0)
+            #self.velocity.normalize()
+            #self.velocity = self.velocity * self.max_speed
 
             rospy.logdebug("force:        %s", force)
             rospy.logdebug("acceleration: %s", acceleration / self.frequency)
@@ -314,10 +318,17 @@ class Boid(object):
             # self.data_list.append([self.velocity.norm(), self.velocity.arg(),
             #                        filtered.norm(), filtered.arg()])
 
-            # Return the the velocity as Twist message.
+            # Return the the velocity as Twist message
             vel = Twist()
-            vel.linear.x = self.velocity.x
-            vel.linear.y = self.velocity.y
+
+            if reset == True:
+                theta = action * 45.0 * (np.pi/180.0)
+                new_vel = np.array([-math.sin(-theta), math.cos(-theta)]) * self.max_speed
+                vel.linear.x = new_vel[0]
+                vel.linear.y = new_vel[1]
+            else:
+                vel.linear.x = self.velocity.x
+                vel.linear.y = self.velocity.y
 
             # Pack all components for Rviz visualization.
             # Make sure these keys are the same as the ones in `util.py`.

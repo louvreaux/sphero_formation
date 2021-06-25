@@ -1,0 +1,4 @@
+
+[submodule "stage_ros"]
+	path = stage_ros
+	url = https://github.com/louvreaux/stage_ros

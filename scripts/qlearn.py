@@ -8,48 +8,55 @@ Inspired by https://gym.openai.com/evaluations/eval_kWknKOkPQ7izrixdhriurA
         @author: Victor Mayoral Vilches <victor@erlerobotics.com>
 '''
 import random
+import rospy
 
 class QLearn:
-    def __init__(self, actions, epsilon, alpha, gamma):
-        self.q = {}
+    def __init__(self, actions, epsilon, alpha, gamma, q):
+        self.q = q
         self.epsilon = epsilon  # exploration constant
         self.alpha = alpha      # discount constant
         self.gamma = gamma      # discount factor
         self.actions = actions
 
     def getQ(self, state, action):
-        return self.q.get((state, action), 0.0)
+        return self.q.get(str((state, action)), 5.0)
+
 
     def learnQ(self, state, action, reward, value):
         '''
         Q-learning:
             Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))            
         '''
-        oldv = self.q.get((state, action), None)
+        oldv = self.q.get(str((state, action)), None)
         if oldv is None:
-            self.q[(state, action)] = reward
+            self.q[str((state, action))] = reward
         else:
-            self.q[(state, action)] = oldv + self.alpha * (value - oldv)
+            self.q[str((state, action))] = oldv + self.alpha * (value - oldv)
 
     def chooseAction(self, state, return_q=False):
         q = [self.getQ(state, a) for a in self.actions]
         maxQ = max(q)
-
+        #print("STANJE: " + str(state))
+        #print("AKCIJE: " + str(q))
         if random.random() < self.epsilon:
-            minQ = min(q); mag = max(abs(minQ), abs(maxQ))
-            # add random values to all the actions, recalculate maxQ
-            q = [q[i] + random.random() * mag - .5 * mag for i in range(len(self.actions))] 
-            maxQ = max(q)
+            #print("NASUMICNA AKCIJA!")
+            rand_act = random.sample(q,1)
+            maxQ = max(rand_act)
 
         count = q.count(maxQ)
         # In case there're several state-action max values 
         # we select a random one among them
         if count > 1:
+            #print("POSTOJI VISE JEDNAKIH AKCIJA! ODABIREM...")
             best = [i for i in range(len(self.actions)) if q[i] == maxQ]
             i = random.choice(best)
+            #print(str(i))
         else:
+            #print("ODABIREM...")
             i = q.index(maxQ)
+            #print(str(i))
 
+        #print("\n")
         action = self.actions[i]        
         if return_q: # if they want it, give it!
             return action, q

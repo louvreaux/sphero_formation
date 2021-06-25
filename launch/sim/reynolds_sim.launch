@@ -12,7 +12,7 @@
 
 	<!-- Start qlearning node -->
     <rosparam command="load" file="$(find sphero_formation)/cfg/qlearn_params.yaml" />
-    <node pkg="sphero_formation" name="sphero_world" type="start_qlearning.py" output="screen"/>
+    <node pkg="sphero_formation" name="sphero_world" type="sphero_ddpg.py" output="screen"/>
 
 	<!-- Record a bag for debug purposes -->
 	<!-- <arg name="rosbag_args" default='-O $(find sphero_formation)/data/sim_test.bag -e "(.*)/odom" '/> -->

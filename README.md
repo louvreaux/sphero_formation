@@ -1,24 +1,42 @@
-# RL Sphero upravljanje
+# RL Sphero control
+NOTICE: This is a work in progress.
 
-UPOZORENJE: trenutno ovo rješenje ne radi najbolje
+This package directly adds onto: https://github.com/mkrizmancic/sphero_formation/tree/0ac14aad3dd1a0af26f191c017e213279eebd52e
+It additonaly uses: 
+1. _open\_ai\_ros_: http://wiki.ros.org/openai_ros
+1. _DDPG-tf2_: https://github.com/samuelmat19/DDPG-tf2
+1. _mantis\_ddqn\_navigation_: https://github.com/bhctsntrk/mantis_ddqn_navigation
 
-Ovaj repozitorij nadovezuje se na: https://github.com/mkrizmancic/sphero_formation/tree/0ac14aad3dd1a0af26f191c017e213279eebd52e
-Koristi se _openai gym_ toolkit za RL (dobiven modifikacijom već postojećeg _openai\_ros_ paketa - http://wiki.ros.org/openai_ros).
-
-## Ovisnosti
-Potrebno je instalirati _openai gym_ paket:
-```bash
-pip install gym
+## Dependencies
 ```
-## O paketu
-Ovaj repozitorij dodatno sadrži nekoliko skripti koje povezuju RL sa ROS-om i Stage simulatorom
-1. _stage\_connection.py_ - klasa koja sadrži _pause, unpause, reset_ funkcije povezane sa Stage simulatorom (relikvija _openai\_ros_ paketa, moguće da će biti izbačena u budućnosti)
-1. _robot\_stage\_env.py_ - najosnovnija verzija _gym environment-a_.
-1. _sphero\_env.py_ - sve što povezuje Sphero robota i ROS (_subscribers_ i _publishers_ )
-1. _sphero\_world.py_ - sve što povezuje Sphero robota i RL (definiranje akcija, stanja, nagrada kao i njihovo _handle-anje_)
-1. _qlearn.py_ - klasa koja sadrži Q-learn jednadžbe
-1. _start\_qlearning.py_ - skripta koja obavlja posao "učenja". Za zadani broj epizoda i koraka u epizodi proračunava i ažurira Q vrijednosti
-1. _qlearn\_params.yaml_ - sadrži parametre vezane za učenje
+python 3.6
+gym
+tensorflow 2.x
+xdotool
+wmctrol
+```
 
-## Pokretanje
-Isto kao i _sphero\_formation_ paket (u _reynolds\_sim.launch_ je dodano pokretanje RL _node-a_)
+## About
+This package connects Stage simulator with RL algorithms. It contains the following scripts:
+1. _stage\_connection.py_ - class that contains _pause, unpause_ and _reset_ functions for Stage
+1. _robot\_stage\_env.py_ - the most basic implementation of the RL _environment_
+1. _sphero\_env.py_ - ROS-Sphero connection, inherits class from _robot\_stage\_env.py_
+1. _sphero\_world.py_ - defines the task of the Sphero robot, inherits class from _sphero\_env.py_
+1. _sphero\_qlearn.py_, _sphero\_dqn.py_, _sphero\_ddpg.py_ - RL algorithms
+
+## Run
+First of all, go to the package directory:
+```bash
+cd catkin_ws/src/sphero_formation
+```
+and initialize the updated _stage\_ros_:
+```bash
+git submodule update --init
+```
+Copy updated Stage to _\src_:
+```bash
+cp -r ~/catkin_ws/src/sphero_formation/stage_ros ~/catkin_ws/src
+```
+Everything else is the same as the _sphero\_formation_ package.
+To change the RL algorithm, change to the appropriate script in _reynolds\_sim.launch_.
+Also, change to the appropriate directories in order to save training results.
