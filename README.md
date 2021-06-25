@@ -40,3 +40,7 @@ cp -r ~/catkin_ws/src/sphero_formation/stage_ros ~/catkin_ws/src
 Everything else is the same as the _sphero\_formation_ package.
 To change the RL algorithm, change to the appropriate script in _reynolds\_sim.launch_.
 Also, change to the appropriate directories in order to save training results.
+
+## Results
+
+Simulation video for flocking using DDPG can be found [here](https://youtu.be/fip2qKlP3mo) and real Sphero robot [here](https://youtu.be/3JLKjcI3qBI).
