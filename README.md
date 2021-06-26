@@ -33,7 +33,7 @@ and initialize the updated _stage\_ros_:
 ```bash
 git submodule update --init
 ```
-Copy updated Stage to _\src_:
+Copy updated Stage to _/src_:
 ```bash
 cp -r ~/catkin_ws/src/sphero_formation/stage_ros ~/catkin_ws/src
 ```
